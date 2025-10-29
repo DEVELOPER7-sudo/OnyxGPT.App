@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 217 91% 60%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 3%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 10%;
+    --sidebar-ring: 217 91% 60%;
+
+    --glow-blue: 0 0 20px hsl(217 91% 60% / 0.5);
+    --glow-blue-strong: 0 0 30px hsl(217 91% 60% / 0.8);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+}
+
+@layer utilities {
+  .glow-blue {
+    box-shadow: var(--glow-blue);
+  }
+  
+  .glow-blue-strong {
+    box-shadow: var(--glow-blue-strong);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 10px hsl(217 91% 60% / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 20px hsl(217 91% 60% / 0.6);
+    }
+  }
+
+  /* Markdown prose styling for AI responses with overflow fixes */
+  .prose {
+    @apply text-foreground;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    @apply font-bold text-foreground mt-4 mb-2 transition-all duration-300;
+  }
+  
+  .prose h1 { @apply text-2xl; }
+  .prose h2 { @apply text-xl; }
+  .prose h3 { @apply text-lg; }
+  
+  .prose p {
+    @apply my-2 break-words;
+  }
+  
+  .prose strong {
+    @apply font-semibold text-foreground;
+  }
+  
+  .prose em {
+    @apply italic;
+  }
+  
+  .prose ul, .prose ol {
+    @apply my-2 ml-4;
+  }
+  
+  .prose li {
+    @apply my-1;
+  }
+  
+  .prose ul > li {
+    @apply list-disc;
+  }
+  
+  .prose ol > li {
+    @apply list-decimal;
+  }
+  
+  .prose code {
+    @apply bg-muted text-accent-foreground px-1.5 py-0.5 rounded text-sm font-mono;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .prose pre {
+    @apply bg-muted p-4 rounded-lg my-3 border border-border;
+    overflow-x: auto;
+    max-width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.3) transparent;
+  }
+  
+  .prose pre::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  .prose pre::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .prose pre::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.3);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+  }
+  
+  .prose pre::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.5);
+  }
+  
+  .prose pre code {
+    @apply bg-transparent p-0;
+    white-space: pre;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+  
+  .prose blockquote {
+    @apply border-l-4 border-primary pl-4 italic my-3 text-muted-foreground transition-all duration-300;
+  }
+  
+  .prose a {
+    @apply text-primary hover:underline transition-all duration-200;
+  }
+  
+  .prose hr {
+    @apply border-border my-4;
+  }
+  
+  .prose table {
+    @apply w-full border-collapse my-3;
+    overflow-x: auto;
+    display: block;
+  }
+  
+  .prose th, .prose td {
+    @apply border border-border px-3 py-2 transition-colors duration-200;
+  }
+  
+  .prose th {
+    @apply bg-muted font-semibold;
+  }
+  
+  .prose td:hover {
+    @apply bg-muted/50;
+  }
+  
+  .prose img {
+    @apply rounded-lg max-w-full h-auto my-3 transition-transform duration-300;
+  }
+  
+  .prose img:hover {
+    @apply scale-[1.02];
+  }
+}

@@ -22,6 +22,9 @@ import {
   Loader2,
   Globe,
   Search as SearchIcon,
+  Pause,
+  Play,
+  Square,
 } from 'lucide-react';
 import { Chat, Message } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -34,6 +37,9 @@ interface ChatAreaProps {
   onDeleteChat: (chatId: string) => void;
   onRegenerateMessage: (messageId: string) => void;
   isLoading: boolean;
+  isPaused: boolean;
+  onPauseGeneration: () => void;
+  onStopGeneration: () => void;
   webSearchEnabled: boolean;
   deepSearchEnabled: boolean;
   onToggleWebSearch: () => void;
@@ -47,6 +53,9 @@ const ChatArea = ({
   onDeleteChat,
   onRegenerateMessage,
   isLoading,
+  isPaused,
+  onPauseGeneration,
+  onStopGeneration,
   webSearchEnabled,
   deepSearchEnabled,
   onToggleWebSearch,
@@ -296,9 +305,38 @@ const ChatArea = ({
             </div>
           ))}
           {isLoading && (
-            <div className="flex gap-3 animate-slide-up">
+            <div className="flex gap-3 animate-slide-up items-center">
               <div className="bg-card border border-border rounded-2xl p-4 shadow-lg">
                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onPauseGeneration}
+                  className="gap-2"
+                >
+                  {isPaused ? (
+                    <>
+                      <Play className="w-4 h-4" />
+                      Resume
+                    </>
+                  ) : (
+                    <>
+                      <Pause className="w-4 h-4" />
+                      Pause
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onStopGeneration}
+                  className="gap-2 text-destructive hover:text-destructive"
+                >
+                  <Square className="w-4 h-4" />
+                  Stop
+                </Button>
               </div>
             </div>
           )}

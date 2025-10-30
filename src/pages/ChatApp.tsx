@@ -26,6 +26,8 @@ const ChatApp = () => {
   const [currentView, setCurrentView] = useState<'chat' | 'images' | 'memory' | 'search' | 'settings'>('chat');
   const [webSearchEnabled, setWebSearchEnabled] = useState(settings.enableWebSearch);
   const [deepSearchEnabled, setDeepSearchEnabled] = useState(settings.enableDeepSearch);
+  const [isPaused, setIsPaused] = useState(false);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   // Apply theme
   useTheme(settings);
@@ -186,6 +188,10 @@ What would you like to work on today?`,
       });
     }
 
+    const controller = new AbortController();
+    setAbortController(controller);
+    setIsPaused(false);
+
     const response = await puter.ai.chat(formattedMessages, {
       model: modelId,
       stream: true,
@@ -204,12 +210,30 @@ What would you like to work on today?`,
     const chat = chats.find(c => c.id === chatId);
     if (!chat) return;
 
-    for await (const part of response) {
-      fullResponse += part?.text || '';
-      assistantMessage.content = fullResponse;
-      const updatedMessages = [...messages, assistantMessage];
-      storage.updateChat(chatId, { messages: updatedMessages });
-      setChats(prevChats => prevChats.map(c => c.id === chatId ? { ...c, messages: updatedMessages } : c));
+    try {
+      for await (const part of response) {
+        if (controller.signal.aborted) {
+          break;
+        }
+        
+        // Wait if paused
+        while (isPaused && !controller.signal.aborted) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        if (controller.signal.aborted) {
+          break;
+        }
+        
+        fullResponse += part?.text || '';
+        assistantMessage.content = fullResponse;
+        const updatedMessages = [...messages, assistantMessage];
+        storage.updateChat(chatId, { messages: updatedMessages });
+        setChats(prevChats => prevChats.map(c => c.id === chatId ? { ...c, messages: updatedMessages } : c));
+      }
+    } finally {
+      setAbortController(null);
+      setIsPaused(false);
     }
 
     // Auto-generate title for first message
@@ -323,6 +347,18 @@ What would you like to work on today?`,
     toast.success('All data cleared');
   };
 
+  const handlePauseGeneration = () => {
+    setIsPaused(!isPaused);
+  };
+
+  const handleStopGeneration = () => {
+    if (abortController) {
+      abortController.abort();
+      setIsLoading(false);
+      toast.info('Generation stopped');
+    }
+  };
+
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
       {/* Mobile Menu Button */}
@@ -381,6 +417,9 @@ What would you like to work on today?`,
             onDeleteChat={handleDeleteChat}
             onRegenerateMessage={handleRegenerateMessage}
             isLoading={isLoading}
+            isPaused={isPaused}
+            onPauseGeneration={handlePauseGeneration}
+            onStopGeneration={handleStopGeneration}
             webSearchEnabled={webSearchEnabled}
             deepSearchEnabled={deepSearchEnabled}
             onToggleWebSearch={() => setWebSearchEnabled(!webSearchEnabled)}

@@ -22,9 +22,8 @@ import {
   Loader2,
   Globe,
   Search as SearchIcon,
-  Pause,
-  Play,
   Square,
+  X,
 } from 'lucide-react';
 import { Chat, Message } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -37,8 +36,6 @@ interface ChatAreaProps {
   onDeleteChat: (chatId: string) => void;
   onRegenerateMessage: (messageId: string) => void;
   isLoading: boolean;
-  isPaused: boolean;
-  onPauseGeneration: () => void;
   onStopGeneration: () => void;
   webSearchEnabled: boolean;
   deepSearchEnabled: boolean;
@@ -53,8 +50,6 @@ const ChatArea = ({
   onDeleteChat,
   onRegenerateMessage,
   isLoading,
-  isPaused,
-  onPauseGeneration,
   onStopGeneration,
   webSearchEnabled,
   deepSearchEnabled,
@@ -305,36 +300,17 @@ const ChatArea = ({
             </div>
           ))}
           {isLoading && (
-            <div className="flex gap-3 animate-slide-up items-center">
-              <div className="bg-card border border-border rounded-2xl p-4 shadow-lg">
+            <div className="flex gap-3 animate-slide-up items-start">
+              <div className="bg-card border border-border rounded-2xl p-4 shadow-lg flex items-center gap-3">
                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
-              </div>
-              <div className="flex gap-2">
+                <span className="text-sm text-muted-foreground">Generating response...</span>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onPauseGeneration}
-                  className="gap-2"
-                >
-                  {isPaused ? (
-                    <>
-                      <Play className="w-4 h-4" />
-                      Resume
-                    </>
-                  ) : (
-                    <>
-                      <Pause className="w-4 h-4" />
-                      Pause
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={onStopGeneration}
-                  className="gap-2 text-destructive hover:text-destructive"
+                  className="gap-2 ml-2 h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
-                  <Square className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                   Stop
                 </Button>
               </div>

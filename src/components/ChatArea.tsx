@@ -104,7 +104,8 @@ const ChatArea = ({
     if (!input.trim() && uploadedFiles.length === 0) return;
     if (isLoading) return;
 
-    onSendMessage(input, uploadedFiles.map(f => f.url));
+    // Pass storage paths instead of signed URLs (will be regenerated when needed)
+    onSendMessage(input, uploadedFiles.map(f => f.storagePath));
 
     // clear UI state
     setInput('');

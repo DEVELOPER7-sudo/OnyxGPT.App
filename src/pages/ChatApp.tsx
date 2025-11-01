@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useChatSync } from '@/hooks/useChatSync';
 import MotionBackground from '@/components/MotionBackground';
 import { createPuterAPILogger } from '@/lib/api-logger';
+import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load heavy components
 const SettingsPanel = lazy(() => import('@/components/SettingsPanel'));
@@ -173,22 +174,47 @@ What would you like to work on today?`,
       return;
     }
     
-    // Validate attachments
+    // Validate and convert attachments to valid URLs
     if (attachments && attachments.length > 0) {
       if (attachments.length > 10) {
         toast.error('Too many attachments (max 10)');
         setIsLoading(false);
         return;
       }
-      // Validate attachment URLs are from Supabase
-      const invalidAttachment = attachments.find(url => 
-        !url.includes('supabase.co/storage') && !url.includes('localhost')
-      );
-      if (invalidAttachment) {
-        toast.error('Invalid file source');
-        setIsLoading(false);
-        return;
+      
+      // Convert storage paths or expired signed URLs to fresh signed URLs
+      const validAttachments: string[] = [];
+      for (const attachment of attachments) {
+        // Check if it's already a valid full URL (not expired)
+        if (attachment.startsWith('http') && attachment.includes('supabase.co/storage')) {
+          validAttachments.push(attachment);
+        } else {
+          // It's a storage path, generate fresh signed URL
+          try {
+            const { data: signedUrlData, error } = await supabase.storage
+              .from('chat-files')
+              .createSignedUrl(attachment, 3600); // 1 hour expiry
+            
+            if (error || !signedUrlData) {
+              if (import.meta.env.DEV) {
+                console.error('Failed to generate signed URL for:', attachment, error);
+              }
+              toast.error('Failed to load attached file');
+              setIsLoading(false);
+              return;
+            }
+            validAttachments.push(signedUrlData.signedUrl);
+          } catch (err) {
+            if (import.meta.env.DEV) {
+              console.error('Error generating signed URL:', err);
+            }
+            toast.error('Failed to load attached file');
+            setIsLoading(false);
+            return;
+          }
+        }
       }
+      attachments = validAttachments;
     }
 
     // Prepare basics
@@ -222,8 +248,15 @@ What would you like to work on today?`,
         storage.updateChat(chatId, { messages: startMessages });
         setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, messages: startMessages } : c)));
 
-        const visionParams = { prompt: userText || 'What do you see?', imageUrl: attachments[0], model: modelId };
-        const res = await puter.ai.chat(visionParams.prompt, visionParams.imageUrl, { model: visionParams.model });
+        // CORRECT API FORMAT: puter.ai.chat(prompt, imageUrl, { model })
+        const imageUrl = attachments[0];
+        const prompt = userText || 'What do you see?';
+        
+        if (import.meta.env.DEV && settings.enableDebugLogs) {
+          console.log('[DEBUG] Calling puter.ai.chat with:', { prompt, imageUrl, model: modelId });
+        }
+        
+        const res = await puter.ai.chat(prompt, imageUrl, { model: modelId });
 
         let full = '';
         const hasAsyncIter = (res as any)?.[Symbol.asyncIterator]?.bind(res);
@@ -248,7 +281,7 @@ What would you like to work on today?`,
           setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, messages: updated } : c)));
         }
 
-        logger.logSuccess('puter.ai.chat (vision)', visionParams, full);
+        logger.logSuccess('puter.ai.chat (vision)', { prompt, imageUrl, model: modelId }, full);
 
         // Auto-generate title for first turn
         if (messages.length === 1) {

@@ -44,4 +44,5 @@ export interface AppSettings {
   themeColor?: string;
   accentColor?: string;
   backgroundColor?: string;
+  taskMode?: 'standard' | 'reasoning' | 'research' | 'creative';
 }

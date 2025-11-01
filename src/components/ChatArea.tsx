@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useVisionAI } from '@/hooks/useVisionAI';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import LoadingDots from '@/components/LoadingDots';
 import {
   Send,
   Mic,
@@ -25,6 +27,7 @@ import {
   Search as SearchIcon,
   Square,
   X,
+  FileText,
 } from 'lucide-react';
 import { Chat, Message } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -43,6 +46,9 @@ interface ChatAreaProps {
   deepSearchEnabled: boolean;
   onToggleWebSearch: () => void;
   onToggleDeepSearch: () => void;
+  currentModel?: string;
+  taskMode?: 'standard' | 'reasoning' | 'research' | 'creative';
+  onTaskModeChange?: (mode: 'standard' | 'reasoning' | 'research' | 'creative') => void;
 }
 
 const ChatArea = ({
@@ -58,18 +64,20 @@ const ChatArea = ({
   deepSearchEnabled,
   onToggleWebSearch,
   onToggleDeepSearch,
+  currentModel = 'gpt-5-nano',
+  taskMode = 'standard',
+  onTaskModeChange,
 }: ChatAreaProps) => {
   const [input, setInput] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingMessageContent, setEditingMessageContent] = useState('');
-  const [attachments, setAttachments] = useState<string[]>([]);
-  const [puterPaths, setPuterPaths] = useState<string[]>([]);
   const [analyzeImages, setAnalyzeImages] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { analyzeImage, isAnalyzing } = useVisionAI();
+  const { uploadFile, isUploading, uploadedFiles, clearFiles, removeFile } = useFileUpload();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -92,29 +100,28 @@ const ChatArea = ({
   }, [chat?.id, input]);
 
   const handleSend = async () => {
-    if (!input.trim() && attachments.length === 0) return;
+    if (!input.trim() && uploadedFiles.length === 0) return;
     if (isLoading || isAnalyzing) return; // Prevent multiple sends
     
     // If images are attached and analyze is enabled, analyze them first
-    if (analyzeImages && puterPaths.length > 0) {
+    if (analyzeImages && uploadedFiles.length > 0) {
       try {
         const analyses = await Promise.all(
-          puterPaths.map(path => analyzeImage(path, input || "What do you see in this image?"))
+          uploadedFiles.map(file => analyzeImage(file.puterPath, input || "What do you see in this image?", currentModel))
         );
         const combinedAnalysis = analyses.join('\n\n---\n\n');
         const enhancedInput = `${input}\n\n[Vision AI Analysis]:\n${combinedAnalysis}`;
-        onSendMessage(enhancedInput, puterPaths);
+        onSendMessage(enhancedInput, uploadedFiles.map(f => f.puterPath));
       } catch (error) {
-        onSendMessage(input, puterPaths);
+        onSendMessage(input, uploadedFiles.map(f => f.puterPath));
       }
     } else {
-      onSendMessage(input, puterPaths);
+      onSendMessage(input, uploadedFiles.map(f => f.puterPath));
     }
     
     // clear UI state
     setInput('');
-    setAttachments([]);
-    setPuterPaths([]);
+    clearFiles();
     if (chat) localStorage.removeItem(`draft_${chat.id}`);
   };
 
@@ -129,37 +136,20 @@ const ChatArea = ({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    // Preview URLs for UI
-    const previews: string[] = [];
-    const paths: string[] = [];
-
+    toast.info(`Uploading ${files.length} file(s)...`);
+    
     try {
-      // @ts-ignore - Puter is loaded via script tag
-      const puter = window.puter;
-      if (!puter?.fs?.write) {
-        toast.error('Puter FS not available. Please sign in to Puter.');
-        return;
-      }
-
       for (const file of Array.from(files)) {
-        previews.push(URL.createObjectURL(file));
-        const dest = `AIStudioUploads/${Date.now()}_${file.name}`;
-        try {
-          const res = await puter.fs.write(dest, file);
-          const p = res?.path || dest;
-          paths.push(p);
-        } catch (err) {
-          console.error('File upload error:', err);
-          toast.error(`Failed to upload ${file.name}`);
-        }
+        await uploadFile(file);
       }
-
-      setAttachments(prev => [...prev, ...previews]);
-      setPuterPaths(prev => [...prev, ...paths]);
-      toast.success(`${files.length} file(s) attached`);
     } catch (err) {
-      console.error(err);
-      toast.error('File attach failed');
+      console.error('File upload error:', err);
+      toast.error('File upload failed');
+    }
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -382,15 +372,14 @@ const ChatArea = ({
           {isLoading && (
             <div className="flex gap-3 animate-bounce-in items-start">
               <div className="bg-card border border-border rounded-2xl p-4 shadow-lg flex items-center gap-3 animate-pulse-glow">
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">Generating response...</span>
+                <LoadingDots />
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onStopGeneration}
-                  className="gap-2 ml-2 h-8 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all duration-200 hover:scale-110"
+                  className="text-destructive hover:text-destructive"
                 >
-                  <X className="w-4 h-4" />
+                  <Square className="w-4 h-4 mr-1" />
                   Stop
                 </Button>
               </div>
@@ -402,8 +391,24 @@ const ChatArea = ({
       {/* Input Area */}
       <div className="border-t border-border p-2 md:p-4 bg-card/50 backdrop-blur-sm flex-shrink-0 z-10 safe-bottom">
         <div className="max-w-4xl mx-auto space-y-2 md:space-y-3">
-          {/* Toggles */}
+          {/* Toggles and Task Mode */}
           <div className="flex flex-wrap items-center gap-3 md:gap-6 text-xs md:text-sm">
+            {onTaskModeChange && (
+              <div className="flex items-center gap-2">
+                <Label htmlFor="task-mode" className="whitespace-nowrap text-xs">Task Mode:</Label>
+                <Select value={taskMode} onValueChange={(value: any) => onTaskModeChange(value)}>
+                  <SelectTrigger id="task-mode" className="h-8 w-[120px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="reasoning">Reasoning</SelectItem>
+                    <SelectItem value="research">Research</SelectItem>
+                    <SelectItem value="creative">Creative</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <Switch
                 checked={webSearchEnabled}
@@ -443,22 +448,26 @@ const ChatArea = ({
           </div>
 
           {/* Attachments */}
-          {attachments.length > 0 && (
+          {uploadedFiles.length > 0 && (
             <div className="flex gap-2 flex-wrap">
-              {attachments.map((url, i) => (
+              {uploadedFiles.map((file, i) => (
                 <div key={i} className="relative group">
-                  <img src={url} alt="" className="w-16 h-16 rounded object-cover" />
+                  {file.type.startsWith('image/') ? (
+                    <img src={file.url} alt={file.name} className="w-16 h-16 rounded object-cover" />
+                  ) : (
+                    <div className="w-16 h-16 rounded bg-secondary flex items-center justify-center">
+                      <FileText className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
                   <Button
                     variant="destructive"
                     size="icon"
                     className="absolute -top-2 -right-2 h-5 w-5 opacity-0 group-hover:opacity-100"
-                    onClick={() => {
-                      setAttachments(attachments.filter((_, idx) => idx !== i));
-                      setPuterPaths(puterPaths.filter((_, idx) => idx !== i));
-                    }}
+                    onClick={() => removeFile(file.puterPath)}
                   >
                     ×
                   </Button>
+                  <p className="text-xs mt-1 truncate w-16" title={file.name}>{file.name}</p>
                 </div>
               ))}
             </div>
@@ -469,7 +478,7 @@ const ChatArea = ({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.txt,.json,.xml,.pdf,.doc,.docx"
               multiple
               className="hidden"
               onChange={handleFileUpload}

@@ -19,6 +19,7 @@ const SettingsPanel = lazy(() => import('@/components/SettingsPanel'));
 const ImagesGallery = lazy(() => import('@/components/ImagesGallery'));
 const MemoryEditor = lazy(() => import('@/components/MemoryEditor'));
 const SearchPanel = lazy(() => import('@/components/SearchPanel'));
+const LogCenter = lazy(() => import('@/components/LogCenter'));
 
 const ChatApp = () => {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -27,9 +28,10 @@ const ChatApp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'chat' | 'images' | 'memory' | 'search' | 'settings'>('chat');
+  const [currentView, setCurrentView] = useState<'chat' | 'images' | 'memory' | 'search' | 'settings' | 'logs'>('chat');
   const [webSearchEnabled, setWebSearchEnabled] = useState(settings.enableWebSearch);
   const [deepSearchEnabled, setDeepSearchEnabled] = useState(settings.enableDeepSearch);
+  const [taskMode, setTaskMode] = useState<'standard' | 'reasoning' | 'research' | 'creative'>(settings.taskMode || 'standard');
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   
   const { user, signOut, loading: authLoading } = useAuth();
@@ -282,7 +284,7 @@ What would you like to work on today?`,
     toast.success(`Image generated with ${settings.imageModel}`);
   };
 
-  const handleNavigate = (section: 'images' | 'memory' | 'search' | 'settings') => {
+  const handleNavigate = (section: 'images' | 'memory' | 'search' | 'settings' | 'logs') => {
     setCurrentView(section);
     setMobileMenuOpen(false);
   };
@@ -346,6 +348,7 @@ What would you like to work on today?`,
     storage.saveSettings(newSettings);
     setWebSearchEnabled(newSettings.enableWebSearch);
     setDeepSearchEnabled(newSettings.enableDeepSearch);
+    setTaskMode(newSettings.taskMode || 'standard');
   };
 
   const handleExportChats = () => {
@@ -440,6 +443,9 @@ What would you like to work on today?`,
             deepSearchEnabled={deepSearchEnabled}
             onToggleWebSearch={() => setWebSearchEnabled(!webSearchEnabled)}
             onToggleDeepSearch={() => setDeepSearchEnabled(!deepSearchEnabled)}
+            currentModel={settings.textModel}
+            taskMode={taskMode}
+            onTaskModeChange={setTaskMode}
           />
         )}
         <Suspense fallback={
@@ -465,6 +471,7 @@ What would you like to work on today?`,
               setCurrentView('chat');
             }} />
           )}
+          {currentView === 'logs' && <LogCenter />}
         </Suspense>
         </div>
       </div>

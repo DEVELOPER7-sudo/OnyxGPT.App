@@ -4,7 +4,11 @@ import { toast } from 'sonner';
 export const useVisionAI = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const analyzeImage = async (imagePath: string, prompt: string = "What do you see in this image? Provide a detailed description."): Promise<string> => {
+  const analyzeImage = async (
+    imagePath: string, 
+    prompt: string = "What do you see in this image? Provide a detailed description.",
+    model: string = "gpt-5-nano"
+  ): Promise<string> => {
     setIsAnalyzing(true);
     try {
       // @ts-ignore - Puter is loaded via script tag
@@ -14,9 +18,9 @@ export const useVisionAI = () => {
         throw new Error('Puter AI not available');
       }
 
-      // Use vision-capable models (gpt-5-nano supports vision)
+      // Use the specified model for vision analysis (supports all vision-capable models)
       const response = await puter.ai.chat(prompt, imagePath, {
-        model: "gpt-5-nano",
+        model: model,
       });
 
       let fullResponse = '';

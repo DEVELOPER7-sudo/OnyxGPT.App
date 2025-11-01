@@ -74,6 +74,7 @@ const ChatArea = ({
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingMessageContent, setEditingMessageContent] = useState('');
   const [analyzeImages, setAnalyzeImages] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { analyzeImage, isAnalyzing } = useVisionAI();
@@ -391,62 +392,6 @@ const ChatArea = ({
       {/* Input Area */}
       <div className="border-t border-border p-2 md:p-4 bg-card/50 backdrop-blur-sm flex-shrink-0 z-10 safe-bottom">
         <div className="max-w-4xl mx-auto space-y-2 md:space-y-3">
-          {/* Toggles and Task Mode */}
-          <div className="flex flex-wrap items-center gap-3 md:gap-6 text-xs md:text-sm">
-            {onTaskModeChange && (
-              <div className="flex items-center gap-2">
-                <Label htmlFor="task-mode" className="whitespace-nowrap text-xs">Task Mode:</Label>
-                <Select value={taskMode} onValueChange={(value: any) => onTaskModeChange(value)}>
-                  <SelectTrigger id="task-mode" className="h-8 w-[120px] text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="reasoning">Reasoning</SelectItem>
-                    <SelectItem value="research">Research</SelectItem>
-                    <SelectItem value="creative">Creative</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={webSearchEnabled}
-                onCheckedChange={onToggleWebSearch}
-                id="web-search"
-              />
-              <Label htmlFor="web-search" className="flex items-center gap-1 cursor-pointer whitespace-nowrap">
-                <Globe className="w-3 h-3 md:w-4 md:h-4" />
-                <span className="hidden sm:inline">Web Search</span>
-                <span className="sm:hidden">Web</span>
-              </Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={deepSearchEnabled}
-                onCheckedChange={onToggleDeepSearch}
-                id="deep-search"
-              />
-              <Label htmlFor="deep-search" className="flex items-center gap-1 cursor-pointer whitespace-nowrap">
-                <SearchIcon className="w-3 h-3 md:w-4 md:h-4" />
-                <span className="hidden sm:inline">Deep Search</span>
-                <span className="sm:hidden">Deep</span>
-              </Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={analyzeImages}
-                onCheckedChange={setAnalyzeImages}
-                id="vision-ai"
-              />
-              <Label htmlFor="vision-ai" className="flex items-center gap-1 cursor-pointer whitespace-nowrap">
-                <ImageIcon className="w-3 h-3 md:w-4 md:h-4" />
-                <span className="hidden sm:inline">Vision AI</span>
-                <span className="sm:hidden">Vision</span>
-              </Label>
-            </div>
-          </div>
-
           {/* Attachments */}
           {uploadedFiles.length > 0 && (
             <div className="flex gap-2 flex-wrap">
@@ -519,6 +464,87 @@ const ChatArea = ({
               )}
             </Button>
           </div>
+
+          {/* Advanced Menu */}
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="gap-2"
+            >
+              <SearchIcon className="w-4 h-4" />
+              Advanced
+              {showAdvanced ? <X className="w-3 h-3" /> : null}
+            </Button>
+            
+            {isUploading && (
+              <span className="text-xs text-muted-foreground flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Uploading files...
+              </span>
+            )}
+          </div>
+
+          {/* Advanced Options Panel */}
+          {showAdvanced && (
+            <div className="border border-border rounded-lg p-3 bg-card/50 space-y-3 animate-scale-in">
+              {onTaskModeChange && (
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="task-mode-adv" className="whitespace-nowrap text-xs min-w-[80px]">Task Mode:</Label>
+                  <Select value={taskMode} onValueChange={(value: any) => onTaskModeChange(value)}>
+                    <SelectTrigger id="task-mode-adv" className="h-8 flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard</SelectItem>
+                      <SelectItem value="reasoning">Reasoning</SelectItem>
+                      <SelectItem value="research">Research</SelectItem>
+                      <SelectItem value="creative">Creative</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="web-search-adv" className="flex items-center gap-2 cursor-pointer">
+                    <Globe className="w-4 h-4" />
+                    Web Search
+                  </Label>
+                  <Switch
+                    checked={webSearchEnabled}
+                    onCheckedChange={onToggleWebSearch}
+                    id="web-search-adv"
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="deep-search-adv" className="flex items-center gap-2 cursor-pointer">
+                    <SearchIcon className="w-4 h-4" />
+                    Deep Search
+                  </Label>
+                  <Switch
+                    checked={deepSearchEnabled}
+                    onCheckedChange={onToggleDeepSearch}
+                    id="deep-search-adv"
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="vision-ai-adv" className="flex items-center gap-2 cursor-pointer">
+                    <ImageIcon className="w-4 h-4" />
+                    Vision AI
+                  </Label>
+                  <Switch
+                    checked={analyzeImages}
+                    onCheckedChange={setAnalyzeImages}
+                    id="vision-ai-adv"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

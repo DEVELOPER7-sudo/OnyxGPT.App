@@ -102,29 +102,10 @@ const ChatArea = ({
 
   const handleSend = async () => {
     if (!input.trim() && uploadedFiles.length === 0) return;
-    if (isLoading || isAnalyzing) return; // Prevent multiple sends
-    
-    // Auto-analyze all uploaded files
-    if (uploadedFiles.length > 0) {
-      try {
-        const analyses = await Promise.all(
-          uploadedFiles.map(file => 
-            analyzeImage(file.url, input || "Analyze this file and provide detailed insights.", currentModel)
-          )
-        );
-        const combinedAnalysis = analyses.join('\n\n---\n\n');
-        const enhancedInput = input 
-          ? `${input}\n\n[File Analysis]:\n${combinedAnalysis}` 
-          : `[File Analysis]:\n${combinedAnalysis}`;
-        onSendMessage(enhancedInput, uploadedFiles.map(f => f.storagePath));
-      } catch (error) {
-        console.error('Analysis error:', error);
-        onSendMessage(input, uploadedFiles.map(f => f.storagePath));
-      }
-    } else {
-      onSendMessage(input, uploadedFiles.map(f => f.storagePath));
-    }
-    
+    if (isLoading) return;
+
+    onSendMessage(input, uploadedFiles.map(f => f.storagePath));
+
     // clear UI state
     setInput('');
     clearFiles();
@@ -147,7 +128,22 @@ const ChatArea = ({
     
     try {
       for (const file of Array.from(files)) {
-        await uploadFile(file);
+        const uploaded = await uploadFile(file);
+        if (uploaded) {
+          // Trigger analysis immediately without blocking UI
+          analyzeImage(uploaded.url, input || 'What do you see?', currentModel)
+            .then((analysis) => {
+              if (analysis) {
+                const heading = `[File Analysis: ${uploaded.name}]`;
+                setInput((prev) =>
+                  prev ? `${prev}\n\n${heading}\n${analysis}` : `${heading}\n${analysis}`
+                );
+              }
+            })
+            .catch(() => {
+              // Swallow analysis errors silently to avoid user-facing errors
+            });
+        }
       }
     } catch (err) {
       console.error('File upload error:', err);
@@ -403,7 +399,7 @@ const ChatArea = ({
             <div className="space-y-2 animate-scale-in">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">
-                  {uploadedFiles.length} file(s) attached • Auto-analyzing on send
+                  {uploadedFiles.length} file(s) attached • Analyzing on upload
                 </p>
                 <Button
                   variant="ghost"
@@ -495,11 +491,11 @@ const ChatArea = ({
             </Button>
             <Button
               onClick={handleSend}
-              disabled={isLoading || isAnalyzing}
+              disabled={isLoading}
               className="h-10 w-10 flex-shrink-0"
               size="icon"
             >
-              {isLoading || isAnalyzing ? (
+              {isLoading ? (
                 <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
               ) : (
                 <Send className="w-4 h-4 md:w-5 md:h-5" />

@@ -311,8 +311,11 @@ What would you like to work on today?`,
 
     // Regular text-only flow with system prompt
     const systemPrompt = `You are a helpful AI assistant. ${webSearchEnabled ? 'You may use web knowledge if your model supports it.' : ''} ${deepSearchEnabled ? 'Prefer deeper step-by-step reasoning when needed.' : ''}`.trim();
-    const baseMessages = messages.map((m) => ({ role: m.role, content: m.content }));
+    const baseMessages = messages
+      .filter((m) => typeof m.content === 'string' && m.content.trim().length > 0)
+      .map((m) => ({ role: m.role, content: m.content }));
     let formattedMessages: any[] = [{ role: 'system', content: systemPrompt }, ...baseMessages];
+
 
     // Only log in development
     if (import.meta.env.DEV && settings.enableDebugLogs) {

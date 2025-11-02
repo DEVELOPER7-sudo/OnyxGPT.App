@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useVisionAI } from '@/hooks/useVisionAI';
+
 import { useFileUpload } from '@/hooks/useFileUpload';
 import LoadingDots from '@/components/LoadingDots';
 import {
@@ -77,7 +77,7 @@ const ChatArea = ({
   const [showFileUrls, setShowFileUrls] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { analyzeImage, isAnalyzing } = useVisionAI();
+  
   const { uploadFile, isUploading, uploadedFiles, clearFiles, removeFile } = useFileUpload();
 
   useEffect(() => {
@@ -126,37 +126,29 @@ const ChatArea = ({
     if (!files || files.length === 0) return;
 
     toast.info(`Uploading ${files.length} file(s)...`);
-    
+
     try {
       for (const file of Array.from(files)) {
         const uploaded = await uploadFile(file);
         if (uploaded) {
-          // Trigger analysis immediately without blocking UI
-          analyzeImage(uploaded.url, input || 'What do you see?', currentModel)
-            .then((analysis) => {
-              if (analysis) {
-                const heading = `[File Analysis: ${uploaded.name}]`;
-                setInput((prev) =>
-                  prev ? `${prev}\n\n${heading}\n${analysis}` : `${heading}\n${analysis}`
-                );
-              }
-            })
-            .catch(() => {
-              // Swallow analysis errors silently to avoid user-facing errors
-            });
+          // Immediately trigger Vision AI via chat using the custom prompt and selected model in parent
+          onSendMessage(input || 'What do you see?', [uploaded.storagePath]);
+          // Clear prompt after sending to avoid showing it in the input box
+          setInput('');
         }
       }
+      // Clear local previews since we dispatched the request
+      clearFiles();
     } catch (err) {
       console.error('File upload error:', err);
       toast.error('File upload failed');
-    }
-    
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    } finally {
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard');

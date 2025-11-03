@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { optimizeImageFile } from '@/lib/image-optimizer';
 
 interface UploadedFile {
   name: string;
@@ -14,13 +15,13 @@ export const useFileUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
-  const uploadFile = async (file: File): Promise<UploadedFile | null> => {
+  const uploadFile = async (inputFile: File): Promise<UploadedFile | null> => {
     setIsUploading(true);
     
     // Validate file size (50MB max)
     const MAX_SIZE = 50 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
-      toast.error(`File too large: ${file.name} (max 50MB)`);
+    if (inputFile.size > MAX_SIZE) {
+      toast.error(`File too large: ${inputFile.name} (max 50MB)`);
       setIsUploading(false);
       return null;
     }
@@ -29,19 +30,24 @@ export const useFileUpload = () => {
     const ALLOWED_DOC_TYPES = [
       'text/plain', 'application/json', 'application/xml', 'text/xml', 'application/pdf'
     ];
-    const isImageByType = file.type?.startsWith('image/');
-    const isImageByExt = /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(file.name || '');
-    const hasNoExt = !/\.[^./]+$/.test(file.name || '');
-    const isUnknownType = file.type === '' || file.type === 'application/octet-stream';
+    const isImageByType = inputFile.type?.startsWith('image/');
+    const isImageByExt = /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(inputFile.name || '');
+    const hasNoExt = !/\.[^./]+$/.test(inputFile.name || '');
+    const isUnknownType = inputFile.type === '' || inputFile.type === 'application/octet-stream';
     const isUnknownButLikelyImage = isUnknownType && (isImageByExt || hasNoExt);
-    const isAllowed = isImageByType || isImageByExt || isUnknownButLikelyImage || ALLOWED_DOC_TYPES.includes(file.type);
+    const isAllowed = isImageByType || isImageByExt || isUnknownButLikelyImage || ALLOWED_DOC_TYPES.includes(inputFile.type);
     if (!isAllowed) {
-      toast.error(`File type not allowed: ${file.name}`);
+      toast.error(`File type not allowed: ${inputFile.name}`);
       setIsUploading(false);
       return null;
     }
     
     try {
+      // Optimize images client-side for faster upload + vision processing
+      const file = (isImageByType || isImageByExt || isUnknownButLikelyImage)
+        ? await optimizeImageFile(inputFile)
+        : inputFile;
+
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -51,11 +57,10 @@ export const useFileUpload = () => {
 
       // Create unique file path with user ID and timestamp
       const timestamp = Date.now();
-      const fileExt = file.name.split('.').pop();
+      const ext = file.name.split('.').pop()?.toLowerCase();
       const fileName = `${user.id}/${timestamp}-${file.name}`;
 
       // Determine a reliable content type (mobile/PWA often omits it)
-      const ext = file.name.split('.').pop()?.toLowerCase();
       const extToMime: Record<string, string> = {
         jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp',
         heic: 'image/heic', heif: 'image/heif', pdf: 'application/pdf', txt: 'text/plain', json: 'application/json', xml: 'application/xml'
@@ -63,7 +68,7 @@ export const useFileUpload = () => {
       const resolvedContentType = file.type || (ext ? extToMime[ext] : undefined) || 'application/octet-stream';
 
       // Upload file to Lovable Cloud Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('chat-files')
         .upload(fileName, file, {
           cacheControl: '3600',
@@ -75,25 +80,25 @@ export const useFileUpload = () => {
         throw uploadError;
       }
 
-      // Get signed URL with 1 hour expiry (private bucket)
+      // Get signed URL with 30 min expiry (private bucket)
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('chat-files')
-        .createSignedUrl(fileName, 3600); // 1 hour expiry
+        .createSignedUrl(fileName, 1800);
 
       if (signedUrlError || !signedUrlData) {
         throw new Error('Failed to generate file URL');
       }
       
       const uploadedFileData: UploadedFile = {
-        name: file.name,
+        name: inputFile.name, // show original name to users
         size: file.size,
-        type: file.type,
+        type: resolvedContentType,
         url: signedUrlData.signedUrl,
         storagePath: fileName,
       };
 
       setUploadedFiles(prev => [...prev, uploadedFileData]);
-      toast.success(`${file.name} uploaded successfully`);
+      toast.success(`${inputFile.name} uploaded successfully`);
       
       return uploadedFileData;
     } catch (error: any) {
@@ -102,7 +107,7 @@ export const useFileUpload = () => {
         console.error('File upload error:', error);
       }
       const msg = (error?.message || error?.error || '').toString();
-      toast.error(`Failed to upload ${file.name}${msg ? `: ${msg}` : ''}`);
+      toast.error(`Failed to upload ${inputFile.name}${msg ? `: ${msg}` : ''}`);
       return null;
     } finally {
       setIsUploading(false);
@@ -120,7 +125,7 @@ export const useFileUpload = () => {
 
   const removeFile = async (storagePath: string) => {
     try {
-      // Delete from Supabase Storage
+      // Delete from Lovable Cloud Storage
       const { error } = await supabase.storage
         .from('chat-files')
         .remove([storagePath]);

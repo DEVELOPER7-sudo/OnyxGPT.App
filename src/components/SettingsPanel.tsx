@@ -198,7 +198,10 @@ const SettingsPanel = ({
               <SelectTrigger id="text-model" className="bg-input">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="max-h-[400px]">
+              <SelectContent
+                className="max-h-[400px]"
+                onCloseAutoFocus={(e) => e.preventDefault()}
+              >
                 <div className="px-2 pb-2 sticky top-0 bg-popover z-10">
                   <Input
                     placeholder="Search models..."
@@ -206,6 +209,10 @@ const SettingsPanel = ({
                     onChange={(e) => setModelSearch(e.target.value)}
                     onPointerDown={(e) => e.stopPropagation()}
                     onKeyDown={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    autoFocus
+                    inputMode="search"
                     className="h-8 text-sm"
                   />
                 </div>

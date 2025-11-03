@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Sparkles, Zap, Globe, Shield, Image as ImageIcon, Brain } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -24,16 +25,22 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20 overflow-hidden">
+      <SEO
+        title="OnyxGPT: 500+ AI Models | ChatGPT & Claude Alternative"
+        description="Access 500+ AI models with higher rate limits than ChatGPT. All ChatGPT features plus vision, image generation, and web search. A powerful OpenAI, Claude, Perplexity alternative."
+        canonical="https://f65a04f8-7aee-4309-9141-8488d933011b.lovableproject.com/"
+        keywords={["OpenAI", "ChatGPT alternative", "Claude alternative", "Perplexity alternative", "AI chat", "AI models", "higher rate limits"]}
+      />
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="text-center space-y-8 md:space-y-12 animate-fade-in">
           {/* Hero Section */}
           <div className="space-y-6">
             <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent animate-gradient">
-              OnyxGPT
+              OnyxGPT — 500+ AI Models | ChatGPT, Claude, Perplexity Alternative
             </h1>
             
             <p className="text-xl md:text-3xl font-semibold text-foreground max-w-4xl mx-auto">
-              500+ AI Models Hub
+              Higher rate limits than ChatGPT. All ChatGPT features—plus vision, images, and web search.
             </p>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">

@@ -160,13 +160,29 @@ const SettingsPanel = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="max-h-[400px]">
-                {ALL_TEXT_MODELS.filter((model: any) => !model.isCustom).map((model: any) => (
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Featured Models</div>
+                {ALL_TEXT_MODELS.filter((model: any) => !model.isCustom && model.id.includes('gpt-5')).map((model: any) => (
+                  <SelectItem key={model.id} value={model.id}>
+                    {model.name} ({model.provider})
+                  </SelectItem>
+                ))}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">OpenRouter Models</div>
+                {ALL_TEXT_MODELS.filter((model: any) => !model.isCustom && model.id.includes('openrouter')).map((model: any) => (
+                  <SelectItem key={model.id} value={model.id}>
+                    {model.name} ({model.provider})
+                  </SelectItem>
+                ))}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">Other Models</div>
+                {ALL_TEXT_MODELS.filter((model: any) => !model.isCustom && !model.id.includes('openrouter') && !model.id.includes('gpt-5')).map((model: any) => (
                   <SelectItem key={model.id} value={model.id}>
                     {model.name} ({model.provider})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              🐬 Try Dolphin Mistral 24B Venice - Free uncensored model!
+            </p>
           </div>
 
           <div className="space-y-2">

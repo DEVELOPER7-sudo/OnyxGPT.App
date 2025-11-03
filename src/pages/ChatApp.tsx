@@ -68,7 +68,7 @@ const ChatApp = () => {
   const currentChat = chats.find(c => c.id === currentChatId) || null;
 
   const createNewChat = () => {
-    const welcomeMessage: Message = {
+      const welcomeMessage: Message = {
       id: 'welcome',
       role: 'assistant',
       content: `Hello! I'm your AI assistant. I can help you with:
@@ -79,11 +79,17 @@ const ChatApp = () => {
 • **Research & Analysis** - Answer questions and analyze information
 • **Problem Solving** - Step-by-step guidance for complex tasks
 
+**Available Models:**
+- 🐬 **Dolphin Mistral 24B Venice** - Uncensored & free model
+- 🚀 **GPT-5** - Most capable OpenAI model
+- 💎 **Claude Sonnet 4.5** - Advanced reasoning
+- 🌟 **Gemini 2.5 Pro** - Multimodal excellence
+
 **Quick Tips:**
 - Toggle Web Search for real-time information
 - Enable Deep Search for detailed reasoning
 - Use the settings panel to customize AI models
-- Check Debug Logs in settings if you encounter issues
+- Check Debug Logs if you encounter issues
 
 What would you like to work on today?`,
       timestamp: Date.now(),
@@ -138,6 +144,10 @@ What would you like to work on today?`,
       let errorMessage = 'An error occurred. Please try again.';
       if (error.message?.includes('rate limit') || error.message?.includes('429')) {
         errorMessage = 'Rate limit exceeded. Please try again later.';
+      } else if (error.message?.includes('OpenRouter')) {
+        errorMessage = 'OpenRouter API error. Check your settings or try a different model.';
+      } else if (error.message?.includes('not available')) {
+        errorMessage = 'AI service not available. Please sign in to Puter in Settings.';
       }
       
       toast.error(errorMessage);
@@ -157,14 +167,6 @@ What would you like to work on today?`,
   };
 
   const handleTextChat = async (messages: Message[], chatId: string) => {
-    // @ts-ignore - Puter is loaded via script tag (HTML style)
-    const puter = (window as any)?.puter;
-    if (!puter?.ai?.chat) {
-      toast.error('AI service not available');
-      setIsLoading(false);
-      return;
-    }
-
     // Validate input - extract user message first
     const lastUser = [...messages].reverse().find((m) => m.role === 'user');
     const userText = lastUser?.content ?? '';
@@ -180,6 +182,22 @@ What would you like to work on today?`,
 
     // Use selected model
     const modelId = settings.textModel;
+    
+    // Check if this is an OpenRouter model
+    const isOpenRouterModel = modelId.startsWith('openrouter:');
+    
+    if (isOpenRouterModel) {
+      await handleOpenRouterChat(messages, chatId);
+      return;
+    }
+
+    // @ts-ignore - Puter is loaded via script tag (HTML style)
+    const puter = (window as any)?.puter;
+    if (!puter?.ai?.chat) {
+      toast.error('AI service not available');
+      setIsLoading(false);
+      return;
+    }
 
     // Regular text-only flow with system prompt
     const systemPrompt = `You are a helpful AI assistant. ${webSearchEnabled ? 'You may use web knowledge if your model supports it.' : ''} ${deepSearchEnabled ? 'Prefer deeper step-by-step reasoning when needed.' : ''}`.trim();
@@ -254,6 +272,103 @@ What would you like to work on today?`,
     } catch (streamError) {
       logger.logError('puter.ai.chat (streaming)', chatParams, streamError);
       throw streamError;
+    }
+
+    // Auto-generate title for first message
+    if (messages.length === 1) {
+      const title = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
+      storage.updateChat(chatId, { title });
+      setChats(chats.map(c => c.id === chatId ? { ...c, title } : c));
+    }
+  };
+
+  const handleOpenRouterChat = async (messages: Message[], chatId: string) => {
+    const systemPrompt = `You are a helpful AI assistant. ${webSearchEnabled ? 'You may use web knowledge if your model supports it.' : ''} ${deepSearchEnabled ? 'Prefer deeper step-by-step reasoning when needed.' : ''}`.trim();
+    const baseMessages = messages
+      .filter((m) => typeof m.content === 'string' && m.content.trim().length > 0)
+      .map((m) => ({ role: m.role, content: m.content }));
+    const formattedMessages = [{ role: 'system', content: systemPrompt }, ...baseMessages];
+
+    // Remove 'openrouter:' prefix for the actual API call
+    const modelId = settings.textModel.replace('openrouter:', '');
+
+    if (settings.enableDebugLogs) {
+      console.log('[DEBUG] OpenRouter model:', modelId);
+    }
+
+    const controller = new AbortController();
+    setAbortController(controller);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openrouter-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: formattedMessages,
+          model: modelId,
+          temperature: settings.temperature,
+          max_tokens: settings.maxTokens,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from OpenRouter');
+      }
+
+      let fullResponse = '';
+      const assistantMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: '',
+        timestamp: Date.now(),
+      };
+
+      const chat = chats.find(c => c.id === chatId);
+      if (!chat) return;
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No response stream');
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (controller.signal.aborted) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') continue;
+            
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                fullResponse += content;
+                const currentMessages = [...messages, { ...assistantMessage, content: fullResponse }];
+                storage.updateChat(chatId, { messages: currentMessages });
+                setChats(prevChats => prevChats.map(c => c.id === chatId ? { ...c, messages: currentMessages } : c));
+              }
+            } catch (e) {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+
+      setAbortController(null);
+    } catch (error) {
+      console.error('OpenRouter error:', error);
+      throw error;
     }
 
     // Auto-generate title for first message

@@ -12,6 +12,9 @@ export const TEXT_MODELS = [
   { id: 'openrouter:qwen/qwen3-max', name: 'Qwen 3 Max', provider: 'Qwen' },
   { id: 'openrouter:perplexity/sonar-pro', name: 'Sonar Pro', provider: 'Perplexity' },
   
+  // Special Models
+  { id: 'openrouter:cognitivecomputations/dolphin-mistral-24b-venice-edition:free', name: 'Dolphin Mistral 24B Venice 🐬', provider: 'Cognitive Computations' },
+  
   // Fast & Efficient
   { id: 'gpt-5-mini', name: 'GPT-5 Mini', provider: 'OpenAI' },
   { id: 'gpt-5-nano', name: 'GPT-5 Nano', provider: 'OpenAI' },

@@ -71,18 +71,37 @@ const ChatApp = () => {
       const welcomeMessage: Message = {
       id: 'welcome',
       role: 'assistant',
-      content: `Welcome! I'm your AI assistant.
+      content: `# 👋 Welcome to AI Chat!
 
-• Text generation, code, research, image creation (/img + prompt)
-• Reasoning modes and web/deep search (toggles below)
+I'm your intelligent companion powered by cutting-edge AI models. Here's what I can do for you:
 
-Models:
-- Default: Puter JS models (fast, no keys)
-- Venice Uncensored: uses your OpenRouter key
+## 💬 **Chat & Conversations**
+- Answer questions and have natural conversations
+- Help with coding, writing, research, and problem-solving
+- Multiple AI models: GPT-5, Claude Sonnet 4.5, Gemini 2.5 Pro, DeepSeek R1, Grok 3, and more!
 
-Tip: Settings lets you choose the model and parameters.
+## 🎨 **Image Generation**
+- Create stunning images from text descriptions
+- Just type your prompt and I'll generate images for you
+- Powered by advanced image generation models
 
-How can I help you today?`,
+## 🔍 **Image Analysis**
+- Upload any image and I'll analyze it
+- Get detailed descriptions, identify objects, read text
+- Ask questions about your uploaded images
+- Supports vision-capable models (GPT-5, Gemini, Claude)
+
+## 🌐 **Web & Deep Search**
+- Enable web search to get real-time information
+- Deep search for comprehensive research
+- Toggle these features using the buttons below
+
+## ⚙️ **Customize Your Experience**
+- Access Settings to choose your preferred AI model
+- Adjust temperature and creativity settings
+- Switch between reasoning modes (Standard, Reasoning, Research, Creative)
+
+**Ready to start?** Just type your message or upload an image below! 🚀`,
       timestamp: Date.now(),
     };
 

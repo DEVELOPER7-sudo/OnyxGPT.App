@@ -35,7 +35,7 @@ const Landing = () => {
         <div className="text-center space-y-8 md:space-y-12 animate-fade-in">
           {/* Hero Section */}
           <div className="space-y-6">
-            <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent animate-gradient">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent animate-gradient">
               OnyxGPT — 500+ AI Models | ChatGPT, Claude, Perplexity Alternative
             </h1>
             

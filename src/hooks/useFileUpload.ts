@@ -30,9 +30,11 @@ export const useFileUpload = () => {
       'text/plain', 'application/json', 'application/xml', 'text/xml', 'application/pdf'
     ];
     const isImageByType = file.type?.startsWith('image/');
-    const isImageByExt = /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(file.name);
-    const isOctetWithImageExt = (file.type === '' || file.type === 'application/octet-stream') && isImageByExt;
-    const isAllowed = isImageByType || isImageByExt || isOctetWithImageExt || ALLOWED_DOC_TYPES.includes(file.type);
+    const isImageByExt = /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(file.name || '');
+    const hasNoExt = !/\.[^./]+$/.test(file.name || '');
+    const isUnknownType = file.type === '' || file.type === 'application/octet-stream';
+    const isUnknownButLikelyImage = isUnknownType && (isImageByExt || hasNoExt);
+    const isAllowed = isImageByType || isImageByExt || isUnknownButLikelyImage || ALLOWED_DOC_TYPES.includes(file.type);
     if (!isAllowed) {
       toast.error(`File type not allowed: ${file.name}`);
       setIsUploading(false);
@@ -52,13 +54,21 @@ export const useFileUpload = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${timestamp}-${file.name}`;
 
-      // Upload file to Supabase Storage
+      // Determine a reliable content type (mobile/PWA often omits it)
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      const extToMime: Record<string, string> = {
+        jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp',
+        heic: 'image/heic', heif: 'image/heif', pdf: 'application/pdf', txt: 'text/plain', json: 'application/json', xml: 'application/xml'
+      };
+      const resolvedContentType = file.type || (ext ? extToMime[ext] : undefined) || 'application/octet-stream';
+
+      // Upload file to Lovable Cloud Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('chat-files')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false,
-          contentType: file.type || 'application/octet-stream'
+          contentType: resolvedContentType
         });
 
       if (uploadError) {
@@ -91,7 +101,8 @@ export const useFileUpload = () => {
       if (import.meta.env.DEV) {
         console.error('File upload error:', error);
       }
-      toast.error(`Failed to upload ${file.name}`);
+      const msg = (error?.message || error?.error || '').toString();
+      toast.error(`Failed to upload ${file.name}${msg ? `: ${msg}` : ''}`);
       return null;
     } finally {
       setIsUploading(false);

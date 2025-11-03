@@ -204,8 +204,9 @@ const SettingsPanel = ({
                     placeholder="Search models..."
                     value={modelSearch}
                     onChange={(e) => setModelSearch(e.target.value)}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
                     className="h-8 text-sm"
-                    onClick={(e) => e.stopPropagation()}
                   />
                 </div>
                 {filteredModels.filter((model: any) => !model.isCustom && model.id.includes('venice')).length > 0 && (

@@ -12,6 +12,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { toast } from 'sonner';
 
 import LoadingDots from '@/components/LoadingDots';
+import WelcomeMessage from '@/components/WelcomeMessage';
 import {
   Send,
   Mic,
@@ -278,20 +279,24 @@ const ChatArea = ({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-2 md:p-4" ref={scrollRef}>
-        <div className="max-w-4xl mx-auto space-y-4 pb-4">{chat.messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                'flex gap-3 animate-scale-in w-full',
-                message.role === 'user' ? 'justify-end' : 'justify-start'
-              )}
-            >
+        {chat.messages.length === 0 ? (
+          <WelcomeMessage />
+        ) : (
+          <div className="max-w-4xl mx-auto space-y-4 pb-4">
+            {chat.messages.map((message) => (
+              <div
+                key={message.id}
+                className={cn(
+                  'flex gap-3 w-full',
+                  message.role === 'user' ? 'justify-end animate-slide-in-right' : 'justify-start animate-slide-in-left'
+                )}
+              >
               <div
                 className={cn(
-                  'max-w-[90%] sm:max-w-[85%] min-w-0 rounded-2xl p-3 md:p-4 shadow-lg',
+                  'max-w-[90%] sm:max-w-[85%] min-w-0 rounded-2xl p-3 md:p-4 shadow-lg transition-all duration-300 hover:shadow-xl',
                   message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-card border border-border'
+                    ? 'bg-primary text-primary-foreground hover:scale-[1.02]'
+                    : 'bg-card border border-border hover:border-primary/30'
                 )}
               >
                 {message.imageUrl && (
@@ -446,7 +451,8 @@ const ChatArea = ({
               </div>
             ) : null;
           })()}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Input Area */}

@@ -25,12 +25,15 @@ export const useFileUpload = () => {
       return null;
     }
     
-    // Validate file type
-    const ALLOWED_TYPES = [
-      'image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp',
+    // Validate file type (support mobile HEIC/HEIF and unknown mimetypes)
+    const ALLOWED_DOC_TYPES = [
       'text/plain', 'application/json', 'application/xml', 'text/xml', 'application/pdf'
     ];
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const isImageByType = file.type?.startsWith('image/');
+    const isImageByExt = /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(file.name);
+    const isOctetWithImageExt = (file.type === '' || file.type === 'application/octet-stream') && isImageByExt;
+    const isAllowed = isImageByType || isImageByExt || isOctetWithImageExt || ALLOWED_DOC_TYPES.includes(file.type);
+    if (!isAllowed) {
       toast.error(`File type not allowed: ${file.name}`);
       setIsUploading(false);
       return null;
@@ -54,7 +57,8 @@ export const useFileUpload = () => {
         .from('chat-files')
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          contentType: file.type || 'application/octet-stream'
         });
 
       if (uploadError) {

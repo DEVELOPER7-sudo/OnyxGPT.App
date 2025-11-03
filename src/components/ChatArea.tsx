@@ -78,6 +78,7 @@ const ChatArea = ({
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [expandedThinking, setExpandedThinking] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { analyzeImage, isAnalyzing } = useVisionAI();
   const { uploadFile, isUploading } = useFileUpload();
@@ -108,11 +109,28 @@ const ChatArea = ({
     return { thinking: null, main: content, isThinking: false };
   };
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  const scrollToBottom = (instant = false) => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: instant ? 'auto' : 'smooth', block: 'end' });
     }
-  }, [chat?.messages]);
+  };
+
+  useEffect(() => {
+    scrollToBottom(true);
+  }, [chat?.id]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chat?.messages, isLoading]);
+
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const observer = new MutationObserver(() => {
+      if (isLoading) scrollToBottom();
+    });
+    observer.observe(scrollRef.current, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [isLoading]);
 
   // Persist input drafts per chat to prevent accidental loss
   useEffect(() => {
@@ -132,12 +150,13 @@ const ChatArea = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
+    const isImage = (file.type && file.type.startsWith('image/')) || /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(file.name);
+    if (!isImage) {
       toast.error('Please select an image file');
       return;
     }
 
-    // Upload to Supabase storage
+    // Upload to storage
     const uploadedFile = await uploadFile(file);
     if (uploadedFile) {
       setUploadedImage(uploadedFile.url);
@@ -283,9 +302,9 @@ const ChatArea = ({
           <WelcomeMessage />
         ) : (
           <div className="max-w-4xl mx-auto space-y-4 pb-4">
-            {chat.messages.map((message) => (
+            {chat.messages.map((message, idx) => (
               <div
-                key={message.id}
+                key={message.id + '-' + idx}
                 className={cn(
                   'flex gap-3 w-full',
                   message.role === 'user' ? 'justify-end animate-slide-in-right' : 'justify-start animate-slide-in-left'
@@ -451,9 +470,10 @@ const ChatArea = ({
               </div>
             ) : null;
           })()}
-          </div>
-        )}
-      </div>
+           </div>
+         )}
+         <div ref={bottomRef} />
+       </div>
 
       {/* Input Area */}
       <div className="border-t border-border p-2 md:p-4 bg-card/50 backdrop-blur-sm flex-shrink-0 z-10 safe-bottom">

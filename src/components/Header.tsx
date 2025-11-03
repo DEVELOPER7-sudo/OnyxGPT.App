@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
-import { Sparkles, User, LogOut, Menu } from 'lucide-react';
+import { User, LogOut, Menu } from 'lucide-react';
+import onyxLogo from '@/assets/onyx-logo.png';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,10 +33,7 @@ const Header = ({ onMenuClick, showMenuButton = false, user, onSignOut }: Header
         
         <div className="flex items-center gap-2 flex-1">
           <div className="flex items-center gap-2 group cursor-pointer">
-            <div className="relative">
-              <Sparkles className="h-6 w-6 text-primary animate-pulse-glow" />
-              <div className="absolute inset-0 blur-md bg-primary/30 animate-pulse-glow" />
-            </div>
+            <img src={onyxLogo} alt="OnyxGPT logo" className="h-8 w-8 rounded-md shadow-sm" />
             <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient bg-300% transition-all duration-300 group-hover:scale-105">
               OnyxGPT
             </h1>

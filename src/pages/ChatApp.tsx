@@ -71,7 +71,7 @@ const ChatApp = () => {
       const welcomeMessage: Message = {
       id: 'welcome',
       role: 'assistant',
-      content: `# 👋 Welcome to AI Chat!
+      content: `# 👋 Welcome to OnyxGPT!
 
 I'm your intelligent companion powered by cutting-edge AI models. Here's what I can do for you:
 

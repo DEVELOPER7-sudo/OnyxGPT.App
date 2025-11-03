@@ -105,111 +105,68 @@ const SettingsPanel = ({
       {/* Theme Customization */}
       <ThemeCustomizer settings={localSettings} onUpdateSettings={onUpdateSettings} />
 
-      {/* AI Provider Selection */}
+      {/* Puter Account */}
       <Card className="p-6 space-y-4">
         <div>
-          <h2 className="text-xl font-semibold mb-2">AI Provider</h2>
+          <h2 className="text-xl font-semibold mb-2">Puter Account</h2>
           <p className="text-sm text-muted-foreground">
-            Choose between Puter AI or OpenRouter for chat models
+            Sign in to a Puter account to use AI features. Get 400M free tokens per month per account.
           </p>
         </div>
         
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="provider">Provider</Label>
-            <Select
-              value={localSettings.provider || 'puter'}
-              onValueChange={(value: 'puter' | 'openrouter') =>
-                setLocalSettings({ ...localSettings, provider: value })
-              }
-            >
-              <SelectTrigger id="provider" className="bg-input">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="puter">Puter AI (Free)</SelectItem>
-                <SelectItem value="openrouter">OpenRouter</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {localSettings.provider === 'openrouter' && (
-            <div className="space-y-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <div className="space-y-2">
-                <Label htmlFor="custom-openrouter-key">Custom OpenRouter API Key (Optional)</Label>
-                <Input
-                  id="custom-openrouter-key"
-                  type="password"
-                  placeholder="sk-or-v1-..."
-                  value={localSettings.customOpenRouterKey || ''}
-                  onChange={(e) =>
-                    setLocalSettings({ ...localSettings, customOpenRouterKey: e.target.value })
-                  }
-                  className="bg-input"
-                />
-                <p className="text-xs text-muted-foreground">
-                  ⚠️ <strong>Security Warning:</strong> Using your own API key exposes it in browser storage. The Venice model uses our secure backend key by default.
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Leave empty to use default backend key (recommended for Venice model).
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="openrouter-custom-model">Custom Model ID</Label>
-                <Input
-                  id="openrouter-custom-model"
-                  placeholder="provider/model-name (e.g. ibm-granite/granite-4.0-h-micro)"
-                  value={localSettings.textModel.startsWith('openrouter:') ? localSettings.textModel.replace('openrouter:', '') : ''}
-                  onChange={(e) => {
-                    const raw = e.target.value.trim();
-                    const val = raw ? `openrouter:${raw}` : '';
-                    setLocalSettings({ ...localSettings, textModel: val || localSettings.textModel });
-                  }}
-                  className="bg-input"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Enter any OpenRouter model ID. We'll prefix it for you.
-                </p>
-              </div>
-            </div>
+        <div className="flex flex-wrap gap-3">
+          {!isPuterSignedIn ? (
+            <Button onClick={handlePuterSignIn} size="lg" className="glow-blue">
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign In to Puter
+            </Button>
+          ) : (
+            <Button onClick={handlePuterSignOut} variant="outline" size="lg">
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
           )}
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => window.open('https://puter.com', '_blank')}
+          >
+            Create New Account
+          </Button>
+        </div>
+        
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+          <p className="text-sm"><strong>Check Usage:</strong> Go to puter.com → Settings → Usage</p>
         </div>
       </Card>
 
-      {/* Puter Account */}
-      {localSettings.provider === 'puter' && (
+      {/* Venice Uncensored Configuration */}
+      {localSettings.textModel.includes('dolphin-mistral-24b-venice') && (
         <Card className="p-6 space-y-4">
           <div>
-            <h2 className="text-xl font-semibold mb-2">Puter Account</h2>
+            <h2 className="text-xl font-semibold mb-2">Venice Uncensored Model Settings</h2>
             <p className="text-sm text-muted-foreground">
-              Sign in to a Puter account to use AI features. Get 400M free tokens per month per account.
+              Configure OpenRouter API for Venice uncensored model
             </p>
           </div>
           
-          <div className="flex flex-wrap gap-3">
-            {!isPuterSignedIn ? (
-              <Button onClick={handlePuterSignIn} size="lg" className="glow-blue">
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In to Puter
-              </Button>
-            ) : (
-              <Button onClick={handlePuterSignOut} variant="outline" size="lg">
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => window.open('https://puter.com', '_blank')}
-            >
-              Create New Account
-            </Button>
-          </div>
-          
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-            <p className="text-sm"><strong>Check Usage:</strong> Go to puter.com → Settings → Usage</p>
+          <div className="space-y-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <div className="space-y-2">
+              <Label htmlFor="venice-openrouter-key">OpenRouter API Key (Required for Venice)</Label>
+              <Input
+                id="venice-openrouter-key"
+                type="password"
+                placeholder="sk-or-v1-..."
+                value={localSettings.customOpenRouterKey || ''}
+                onChange={(e) =>
+                  setLocalSettings({ ...localSettings, customOpenRouterKey: e.target.value })
+                }
+                className="bg-input"
+              />
+              <p className="text-xs text-muted-foreground">
+                ⚠️ <strong>Security Warning:</strong> Your API key is stored in browser storage. Use a dedicated key for this app.
+              </p>
+            </div>
           </div>
         </Card>
       )}
@@ -234,20 +191,20 @@ const SettingsPanel = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="max-h-[400px]">
-                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Featured Models</div>
-                {ALL_TEXT_MODELS.filter((model: any) => !model.isCustom && model.id.includes('gpt-5')).map((model: any) => (
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">🐬 Uncensored Model (OpenRouter)</div>
+                {ALL_TEXT_MODELS.filter((model: any) => !model.isCustom && model.id.includes('venice')).map((model: any) => (
+                  <SelectItem key={model.id} value={model.id}>
+                    {model.name}
+                  </SelectItem>
+                ))}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">⚡ Featured Models (Puter JS)</div>
+                {ALL_TEXT_MODELS.filter((model: any) => !model.isCustom && !model.id.includes('venice') && model.id.includes('gpt-5')).map((model: any) => (
                   <SelectItem key={model.id} value={model.id}>
                     {model.name} ({model.provider})
                   </SelectItem>
                 ))}
-                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">OpenRouter Models</div>
-                {ALL_TEXT_MODELS.filter((model: any) => !model.isCustom && model.id.includes('openrouter')).map((model: any) => (
-                  <SelectItem key={model.id} value={model.id}>
-                    {model.name} ({model.provider})
-                  </SelectItem>
-                ))}
-                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">Other Models</div>
-                {ALL_TEXT_MODELS.filter((model: any) => !model.isCustom && !model.id.includes('openrouter') && !model.id.includes('gpt-5')).map((model: any) => (
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">🚀 Other Models (Puter JS)</div>
+                {ALL_TEXT_MODELS.filter((model: any) => !model.isCustom && !model.id.includes('venice') && !model.id.includes('gpt-5')).map((model: any) => (
                   <SelectItem key={model.id} value={model.id}>
                     {model.name} ({model.provider})
                   </SelectItem>
@@ -255,7 +212,7 @@ const SettingsPanel = ({
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              🐬 Try Dolphin Mistral 24B Venice - Free uncensored model!
+              🐬 Venice model uses OpenRouter (requires API key). All others use Puter JS.
             </p>
           </div>
 
@@ -313,15 +270,15 @@ const SettingsPanel = ({
         {/* Custom Model Management */}
         <div className="border-t border-border pt-6 space-y-4">
           <div>
-            <Label className="text-base font-semibold">Add Custom OpenRouter Model</Label>
+            <Label className="text-base font-semibold">Add Custom Puter Model</Label>
             <p className="text-xs text-muted-foreground mt-1">
-              Add any OpenRouter model ID. No need to include "openrouter:" prefix - it's added automatically.
+              Add any custom model ID supported by Puter JS. These will use the Puter endpoint.
             </p>
           </div>
           
           <div className="flex gap-2">
             <Input
-              placeholder="provider/model-name (e.g. ibm-granite/granite-4.0-h-micro)"
+              placeholder="model-name (e.g. custom-model-v1)"
               value={customModelInput}
               onChange={(e) => setCustomModelInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddCustomModel()}

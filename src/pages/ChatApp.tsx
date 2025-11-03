@@ -182,12 +182,11 @@ What would you like to work on today?`,
 
     // Use selected model
     const modelId = settings.textModel;
-    const provider = settings.provider || 'puter';
     
-    // Check if this is an OpenRouter model or if provider is set to OpenRouter
-    const isOpenRouterModel = modelId.startsWith('openrouter:') || provider === 'openrouter';
+    // Venice uncensored model uses OpenRouter endpoint only
+    const isVeniceModel = modelId.includes('dolphin-mistral-24b-venice');
     
-    if (isOpenRouterModel) {
+    if (isVeniceModel) {
       await handleOpenRouterChat(messages, chatId);
       return;
     }
@@ -275,15 +274,23 @@ What would you like to work on today?`,
       throw streamError;
     }
 
-    // Auto-generate title for first message using inbuilt AI (Lovable AI via backend)
+    // Auto-generate title for first message using Puter JS with gpt-5-nano
     if (messages.length === 1) {
       try {
-        const { data, error } = await supabase.functions.invoke('chat-title', {
-          body: { prompt: messages[0].content }
-        });
-        const title = (data as any)?.title || messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
-        storage.updateChat(chatId, { title });
-        setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title } : c));
+        // @ts-ignore
+        const puter = (window as any)?.puter;
+        if (puter?.ai?.chat) {
+          const systemPrompt = 'You generate concise, human-friendly chat titles (max 6 words). No punctuation like quotes. No emojis.';
+          const userPrompt = `Create a short title for this chat based on the user's first message: \n\n${messages[0].content}`;
+          const titleResponse = await puter.ai.chat(`${systemPrompt}\n\n${userPrompt}`, { model: 'gpt-5-nano' });
+          const title = (typeof titleResponse === 'string' ? titleResponse : String(titleResponse)).trim().slice(0, 60) || messages[0].content.slice(0, 50);
+          storage.updateChat(chatId, { title });
+          setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title } : c));
+        } else {
+          const fallback = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
+          storage.updateChat(chatId, { title: fallback });
+          setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title: fallback } : c));
+        }
       } catch (e) {
         const fallback = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
         storage.updateChat(chatId, { title: fallback });
@@ -382,15 +389,23 @@ What would you like to work on today?`,
       throw error;
     }
 
-    // Auto-generate title for first message using inbuilt AI (Lovable AI via backend)
+    // Auto-generate title for first message using Puter JS with gpt-5-nano
     if (messages.length === 1) {
       try {
-        const { data, error } = await supabase.functions.invoke('chat-title', {
-          body: { prompt: messages[0].content }
-        });
-        const title = (data as any)?.title || messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
-        storage.updateChat(chatId, { title });
-        setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title } : c));
+        // @ts-ignore
+        const puter = (window as any)?.puter;
+        if (puter?.ai?.chat) {
+          const systemPrompt = 'You generate concise, human-friendly chat titles (max 6 words). No punctuation like quotes. No emojis.';
+          const userPrompt = `Create a short title for this chat based on the user's first message: \n\n${messages[0].content}`;
+          const titleResponse = await puter.ai.chat(`${systemPrompt}\n\n${userPrompt}`, { model: 'gpt-5-nano' });
+          const title = (typeof titleResponse === 'string' ? titleResponse : String(titleResponse)).trim().slice(0, 60) || messages[0].content.slice(0, 50);
+          storage.updateChat(chatId, { title });
+          setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title } : c));
+        } else {
+          const fallback = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
+          storage.updateChat(chatId, { title: fallback });
+          setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title: fallback } : c));
+        }
       } catch (e) {
         const fallback = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
         storage.updateChat(chatId, { title: fallback });

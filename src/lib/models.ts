@@ -2,24 +2,24 @@ import { beautifyModelName, getProviderFromModelId, getCustomModels } from './mo
 import { ALL_OPENROUTER_MODELS } from './all-models';
 
 export const TEXT_MODELS = [
-  // Featured Models
+  // Venice Uncensored Model (OpenRouter endpoint)
+  { id: 'openrouter:cognitivecomputations/dolphin-mistral-24b-venice-edition:free', name: 'Dolphin Mistral 24B Venice 🐬 (Uncensored)', provider: 'OpenRouter' },
+  
+  // Featured Models (Puter JS endpoint)
   { id: 'gpt-5', name: 'GPT-5', provider: 'OpenAI' },
   { id: 'claude-sonnet-4.5', name: 'Claude Sonnet 4.5', provider: 'Anthropic' },
-  { id: 'openrouter:google/gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google' },
-  { id: 'openrouter:deepseek/deepseek-r1', name: 'DeepSeek R1', provider: 'DeepSeek' },
-  { id: 'openrouter:x-ai/grok-3', name: 'Grok 3', provider: 'xAI' },
-  { id: 'openrouter:meta-llama/llama-4-maverick', name: 'Llama 4 Maverick', provider: 'Meta' },
-  { id: 'openrouter:qwen/qwen3-max', name: 'Qwen 3 Max', provider: 'Qwen' },
-  { id: 'openrouter:perplexity/sonar-pro', name: 'Sonar Pro', provider: 'Perplexity' },
+  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google' },
+  { id: 'deepseek-r1', name: 'DeepSeek R1', provider: 'DeepSeek' },
+  { id: 'grok-3', name: 'Grok 3', provider: 'xAI' },
+  { id: 'llama-4-maverick', name: 'Llama 4 Maverick', provider: 'Meta' },
+  { id: 'qwen3-max', name: 'Qwen 3 Max', provider: 'Qwen' },
+  { id: 'sonar-pro', name: 'Sonar Pro', provider: 'Perplexity' },
   
-  // Special Models
-  { id: 'openrouter:cognitivecomputations/dolphin-mistral-24b-venice-edition:free', name: 'Dolphin Mistral 24B Venice 🐬', provider: 'Cognitive Computations' },
-  
-  // Fast & Efficient
+  // Fast & Efficient (Puter JS endpoint)
   { id: 'gpt-5-mini', name: 'GPT-5 Mini', provider: 'OpenAI' },
   { id: 'gpt-5-nano', name: 'GPT-5 Nano', provider: 'OpenAI' },
-  { id: 'openrouter:google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'Google' },
-  { id: 'openrouter:anthropic/claude-3.5-haiku', name: 'Claude 3.5 Haiku', provider: 'Anthropic' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'Google' },
+  { id: 'claude-3.5-haiku', name: 'Claude 3.5 Haiku', provider: 'Anthropic' },
 ];
 
 /**

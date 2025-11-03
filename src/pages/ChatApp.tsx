@@ -275,29 +275,16 @@ What would you like to work on today?`,
       throw streamError;
     }
 
-    // Auto-generate title for first message using Puter JS API
+    // Auto-generate title for first message using inbuilt AI (Lovable AI via backend)
     if (messages.length === 1) {
       try {
-        // @ts-ignore - Puter is loaded via script tag
-        const puter = (window as any)?.puter;
-        if (puter?.ai?.chat) {
-          const firstPrompt = messages[0].content;
-          const systemPrompt = `Generate a concise, descriptive chat title (max 6 words) based on this user message: "${firstPrompt}". Reply with ONLY the title, no quotes, no punctuation, no emojis.`;
-          
-          const titleResponse = await puter.ai.chat([
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: firstPrompt }
-          ], {
-            model: 'gpt-5-nano',
-            stream: false
-          });
-          
-          const title = (titleResponse?.text || messages[0].content).slice(0, 50).trim();
-          storage.updateChat(chatId, { title });
-          setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title } : c));
-        }
+        const { data, error } = await supabase.functions.invoke('chat-title', {
+          body: { prompt: messages[0].content }
+        });
+        const title = (data as any)?.title || messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
+        storage.updateChat(chatId, { title });
+        setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title } : c));
       } catch (e) {
-        console.error('Error generating chat title:', e);
         const fallback = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
         storage.updateChat(chatId, { title: fallback });
         setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title: fallback } : c));
@@ -395,29 +382,16 @@ What would you like to work on today?`,
       throw error;
     }
 
-    // Auto-generate title for first message using Puter JS API
+    // Auto-generate title for first message using inbuilt AI (Lovable AI via backend)
     if (messages.length === 1) {
       try {
-        // @ts-ignore - Puter is loaded via script tag
-        const puter = (window as any)?.puter;
-        if (puter?.ai?.chat) {
-          const firstPrompt = messages[0].content;
-          const systemPrompt = `Generate a concise, descriptive chat title (max 6 words) based on this user message: "${firstPrompt}". Reply with ONLY the title, no quotes, no punctuation, no emojis.`;
-          
-          const titleResponse = await puter.ai.chat([
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: firstPrompt }
-          ], {
-            model: 'gpt-5-nano',
-            stream: false
-          });
-          
-          const title = (titleResponse?.text || messages[0].content).slice(0, 50).trim();
-          storage.updateChat(chatId, { title });
-          setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title } : c));
-        }
+        const { data, error } = await supabase.functions.invoke('chat-title', {
+          body: { prompt: messages[0].content }
+        });
+        const title = (data as any)?.title || messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
+        storage.updateChat(chatId, { title });
+        setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title } : c));
       } catch (e) {
-        console.error('Error generating chat title:', e);
         const fallback = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
         storage.updateChat(chatId, { title: fallback });
         setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title: fallback } : c));

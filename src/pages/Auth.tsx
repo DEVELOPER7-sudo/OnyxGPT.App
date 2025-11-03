@@ -69,15 +69,12 @@ const Auth = () => {
   const handleGuestMode = async () => {
     try {
       setIsSubmitting(true);
-      // Sign in anonymously for guest mode
-      const { error } = await supabase.auth.signInAnonymously();
-      if (error) {
-        toast.error('Failed to start guest session. Please try again.');
-        return;
-      }
-      // Navigation will happen automatically via auth state change
+      // Enable guest mode without backend auth; restrict access via guard
+      localStorage.setItem('guestMode', 'true');
+      toast.success('Guest session started');
+      navigate('/chat');
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error('Failed to start guest session. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

@@ -78,6 +78,17 @@ const ChatArea = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { analyzeImage, isAnalyzing } = useVisionAI();
 
+  // Format assistant content: extract <think>...</think> blocks into a Markdown "Thinking" section
+  const processThinking = (content: string) => {
+    const thinkRegex = /<think>[\s\S]*?<\/think>/i;
+    const match = content.match(thinkRegex);
+    if (!match) return content;
+    const thinkText = match[0].replace(/<\/?think>/gi, '').trim();
+    const rest = content.replace(thinkRegex, '').trim();
+    const thinkingSection = `### Thinking\n\n\`\`\`text\n${thinkText}\n\`\`\`\n`;
+    return `${thinkingSection}\n${rest}`.trim();
+  };
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -122,22 +133,19 @@ const ChatArea = ({
     // If image is uploaded, analyze it
     if (uploadedImage) {
       const prompt = input.trim() || 'What do you see in this image?';
-      
       // Add user message with image
       const userMessage = `${prompt}\n\n[Image uploaded]`;
       onSendMessage(userMessage);
       setInput('');
-      
-      // Analyze image
-      const analysis = await analyzeImage(uploadedImage, prompt);
-      
-      if (analysis) {
-        // Add AI analysis as a message
-        onSendMessage(`Image Analysis: ${analysis}`);
-      }
-      
+      // Clear preview immediately after sending
       setUploadedImage(null);
       if (chat) localStorage.removeItem(`draft_${chat.id}`);
+
+      // Analyze image (Puter defaults respected)
+      const analysis = await analyzeImage(uploadedImage, prompt);
+      if (analysis) {
+        onSendMessage(`Image Analysis: ${analysis}`);
+      }
     } else {
       onSendMessage(input);
       setInput('');
@@ -294,7 +302,7 @@ const ChatArea = ({
                 {message.role === 'assistant' ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-hidden">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {message.content}
+                      {processThinking(message.content)}
                     </ReactMarkdown>
                   </div>
                 ) : editingMessageId === message.id ? (

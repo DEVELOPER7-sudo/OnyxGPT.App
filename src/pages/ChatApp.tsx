@@ -71,27 +71,18 @@ const ChatApp = () => {
       const welcomeMessage: Message = {
       id: 'welcome',
       role: 'assistant',
-      content: `Hello! I'm your AI assistant. I can help you with:
+      content: `Welcome! I'm your AI assistant.
 
-• **Text Generation** - Write, edit, and brainstorm content
-• **Code Assistance** - Debug, explain, and write code
-• **Image Creation** - Use /img followed by your prompt to generate images
-• **Research & Analysis** - Answer questions and analyze information
-• **Problem Solving** - Step-by-step guidance for complex tasks
+• Text generation, code, research, image creation (/img + prompt)
+• Reasoning modes and web/deep search (toggles below)
 
-**Available Models:**
-- 🐬 **Dolphin Mistral 24B Venice** - Uncensored & free model
-- 🚀 **GPT-5** - Most capable OpenAI model
-- 💎 **Claude Sonnet 4.5** - Advanced reasoning
-- 🌟 **Gemini 2.5 Pro** - Multimodal excellence
+Models:
+- Default: Puter JS models (fast, no keys)
+- Venice Uncensored: uses your OpenRouter key
 
-**Quick Tips:**
-- Toggle Web Search for real-time information
-- Enable Deep Search for detailed reasoning
-- Use the settings panel to customize AI models
-- Check Debug Logs if you encounter issues
+Tip: Settings lets you choose the model and parameters.
 
-What would you like to work on today?`,
+How can I help you today?`,
       timestamp: Date.now(),
     };
 

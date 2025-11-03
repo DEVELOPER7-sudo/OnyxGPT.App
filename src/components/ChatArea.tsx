@@ -7,6 +7,8 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useVisionAI } from '@/hooks/useVisionAI';
+import { toast } from 'sonner';
 
 import LoadingDots from '@/components/LoadingDots';
 import {
@@ -25,10 +27,10 @@ import {
   Search as SearchIcon,
   Square,
   X,
+  Paperclip,
 } from 'lucide-react';
 import { Chat, Message } from '@/types/chat';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 
 interface ChatAreaProps {
   chat: Chat | null;
@@ -71,7 +73,10 @@ const ChatArea = ({
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingMessageContent, setEditingMessageContent] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { analyzeImage, isAnalyzing } = useVisionAI();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -93,13 +98,51 @@ const ChatArea = ({
     }
   }, [chat?.id, input]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    if (isLoading) return;
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    onSendMessage(input);
-    setInput('');
-    if (chat) localStorage.removeItem(`draft_${chat.id}`);
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setUploadedImage(event.target?.result as string);
+      toast.success('Image uploaded! Add a question or click send to analyze.');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() && !uploadedImage) return;
+    if (isLoading || isAnalyzing) return;
+
+    // If image is uploaded, analyze it
+    if (uploadedImage) {
+      const prompt = input.trim() || 'What do you see in this image?';
+      
+      // Add user message with image
+      const userMessage = `${prompt}\n\n[Image uploaded]`;
+      onSendMessage(userMessage);
+      setInput('');
+      
+      // Analyze image
+      const analysis = await analyzeImage(uploadedImage, prompt);
+      
+      if (analysis) {
+        // Add AI analysis as a message
+        onSendMessage(`Image Analysis: ${analysis}`);
+      }
+      
+      setUploadedImage(null);
+      if (chat) localStorage.removeItem(`draft_${chat.id}`);
+    } else {
+      onSendMessage(input);
+      setInput('');
+      if (chat) localStorage.removeItem(`draft_${chat.id}`);
+    }
   };
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -355,6 +398,21 @@ const ChatArea = ({
       {/* Input Area */}
       <div className="border-t border-border p-2 md:p-4 bg-card/50 backdrop-blur-sm flex-shrink-0 z-10 safe-bottom">
         <div className="max-w-4xl mx-auto space-y-2 md:space-y-3">
+          {/* Image Preview */}
+          {uploadedImage && (
+            <div className="relative inline-block animate-scale-in">
+              <img src={uploadedImage} alt="Upload preview" className="h-20 w-20 object-cover rounded-lg border border-border" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive hover:bg-destructive/90"
+                onClick={() => setUploadedImage(null)}
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+          )}
+
           {/* Input */}
           <div className="flex gap-1 md:gap-2">
             <Textarea
@@ -365,6 +423,22 @@ const ChatArea = ({
               className="flex-1 min-h-[60px] max-h-[150px] resize-none text-base"
               style={{ fontSize: '16px' }}
             />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 flex-shrink-0"
+              onClick={() => fileInputRef.current?.click()}
+              title="Upload image for vision AI"
+            >
+              <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -374,11 +448,11 @@ const ChatArea = ({
             </Button>
             <Button
               onClick={handleSend}
-              disabled={isLoading}
+              disabled={isLoading || isAnalyzing}
               className="h-10 w-10 flex-shrink-0"
               size="icon"
             >
-              {isLoading ? (
+              {isLoading || isAnalyzing ? (
                 <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
               ) : (
                 <Send className="w-4 h-4 md:w-5 md:h-5" />

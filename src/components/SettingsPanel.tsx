@@ -134,24 +134,44 @@ const SettingsPanel = ({
           </div>
 
           {localSettings.provider === 'openrouter' && (
-            <div className="space-y-2 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <Label htmlFor="custom-openrouter-key">Custom OpenRouter API Key (Optional)</Label>
-              <Input
-                id="custom-openrouter-key"
-                type="password"
-                placeholder="sk-or-v1-..."
-                value={localSettings.customOpenRouterKey || ''}
-                onChange={(e) =>
-                  setLocalSettings({ ...localSettings, customOpenRouterKey: e.target.value })
-                }
-                className="bg-input"
-              />
-              <p className="text-xs text-muted-foreground">
-                ⚠️ <strong>Security Warning:</strong> Using your own API key exposes it in browser storage. The Venice model uses our secure backend key by default.
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                Leave empty to use default backend key (recommended for Venice model).
-              </p>
+            <div className="space-y-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <div className="space-y-2">
+                <Label htmlFor="custom-openrouter-key">Custom OpenRouter API Key (Optional)</Label>
+                <Input
+                  id="custom-openrouter-key"
+                  type="password"
+                  placeholder="sk-or-v1-..."
+                  value={localSettings.customOpenRouterKey || ''}
+                  onChange={(e) =>
+                    setLocalSettings({ ...localSettings, customOpenRouterKey: e.target.value })
+                  }
+                  className="bg-input"
+                />
+                <p className="text-xs text-muted-foreground">
+                  ⚠️ <strong>Security Warning:</strong> Using your own API key exposes it in browser storage. The Venice model uses our secure backend key by default.
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Leave empty to use default backend key (recommended for Venice model).
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="openrouter-custom-model">Custom Model ID</Label>
+                <Input
+                  id="openrouter-custom-model"
+                  placeholder="provider/model-name (e.g. ibm-granite/granite-4.0-h-micro)"
+                  value={localSettings.textModel.startsWith('openrouter:') ? localSettings.textModel.replace('openrouter:', '') : ''}
+                  onChange={(e) => {
+                    const raw = e.target.value.trim();
+                    const val = raw ? `openrouter:${raw}` : '';
+                    setLocalSettings({ ...localSettings, textModel: val || localSettings.textModel });
+                  }}
+                  className="bg-input"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter any OpenRouter model ID. We'll prefix it for you.
+                </p>
+              </div>
             </div>
           )}
         </div>

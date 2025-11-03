@@ -275,11 +275,20 @@ What would you like to work on today?`,
       throw streamError;
     }
 
-    // Auto-generate title for first message
+    // Auto-generate title for first message using inbuilt AI (Lovable AI via backend)
     if (messages.length === 1) {
-      const title = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
-      storage.updateChat(chatId, { title });
-      setChats(chats.map(c => c.id === chatId ? { ...c, title } : c));
+      try {
+        const { data, error } = await supabase.functions.invoke('chat-title', {
+          body: { prompt: messages[0].content }
+        });
+        const title = (data as any)?.title || messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
+        storage.updateChat(chatId, { title });
+        setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title } : c));
+      } catch (e) {
+        const fallback = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
+        storage.updateChat(chatId, { title: fallback });
+        setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title: fallback } : c));
+      }
     }
   };
 
@@ -373,11 +382,20 @@ What would you like to work on today?`,
       throw error;
     }
 
-    // Auto-generate title for first message
+    // Auto-generate title for first message using inbuilt AI (Lovable AI via backend)
     if (messages.length === 1) {
-      const title = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
-      storage.updateChat(chatId, { title });
-      setChats(chats.map(c => c.id === chatId ? { ...c, title } : c));
+      try {
+        const { data, error } = await supabase.functions.invoke('chat-title', {
+          body: { prompt: messages[0].content }
+        });
+        const title = (data as any)?.title || messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
+        storage.updateChat(chatId, { title });
+        setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title } : c));
+      } catch (e) {
+        const fallback = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
+        storage.updateChat(chatId, { title: fallback });
+        setChats((prev) => prev.map(c => c.id === chatId ? { ...c, title: fallback } : c));
+      }
     }
   };
 
@@ -434,31 +452,19 @@ What would you like to work on today?`,
 
   const handleDeleteChat = async (chatId: string) => {
     try {
-      // Delete from local storage
-      storage.deleteChat(chatId);
-      
-      // Delete from Supabase if user is logged in
-      if (user?.id) {
-        const { error } = await supabase
-          .from('chats')
-          .delete()
-          .eq('id', chatId)
-          .eq('user_id', user.id);
-        
-        if (error) {
-          console.error('Error deleting chat from cloud:', error);
-          toast.error('Failed to delete chat from cloud');
-          return;
-        }
-      }
-      
-      // Update local state
-      setChats(chats.filter(c => c.id !== chatId));
+      // Update local immediately for snappy UI
+      setChats((prev) => {
+        const next = prev.filter((c) => c.id !== chatId);
+        storage.saveChats(next);
+        return next;
+      });
       if (currentChatId === chatId) {
         setCurrentChatId(null);
         storage.setCurrentChatId(null);
       }
-      
+
+      // Let the useChatSync hook detect and propagate deletions to the cloud.
+      // This avoids race conditions where an immediate upsert could recreate the chat.
       toast.success('Chat deleted');
     } catch (error) {
       console.error('Error deleting chat:', error);

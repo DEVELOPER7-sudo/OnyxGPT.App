@@ -201,11 +201,10 @@ I'm your intelligent companion powered by cutting-edge AI models. Here's what I 
     // Use selected model
     const modelId = settings.textModel;
     
-    // Check if it's an OpenRouter model (not :free suffix means it's OpenRouter)
-    const isOpenRouterModel = modelId.startsWith('openrouter:') && 
-      (modelId.includes('dolphin-mistral-24b-venice') || !modelId.includes(':free'));
+    // Venice uncensored model uses OpenRouter endpoint only
+    const isVeniceModel = modelId.includes('dolphin-mistral-24b-venice');
     
-    if (isOpenRouterModel) {
+    if (isVeniceModel) {
       await handleOpenRouterChat(messages, chatId);
       return;
     }

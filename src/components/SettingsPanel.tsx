@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { AppSettings } from '@/types/chat';
-import { getAllPuterModels, getAllOpenRouterModels, IMAGE_MODELS } from '@/lib/models';
+import { getAllTextModels, IMAGE_MODELS } from '@/lib/models';
 import { beautifyModelName, getCustomModels, addCustomModel, removeCustomModel } from '@/lib/model-utils';
 import { toast } from 'sonner';
 import { Download, Upload, LogOut, LogIn, Trash2, Plus, X } from 'lucide-react';
@@ -30,32 +30,19 @@ const SettingsPanel = ({
 }: SettingsPanelProps) => {
   const [localSettings, setLocalSettings] = useState(settings);
   const [isPuterSignedIn, setIsPuterSignedIn] = useState(false);
-  const [customPuterModelInput, setCustomPuterModelInput] = useState('');
-  const [customOpenRouterModelInput, setCustomOpenRouterModelInput] = useState('');
+  const [customModelInput, setCustomModelInput] = useState('');
   const [customModels, setCustomModels] = useState<string[]>(getCustomModels());
-  const [puterModelSearch, setPuterModelSearch] = useState('');
-  const [openRouterModelSearch, setOpenRouterModelSearch] = useState('');
-  const [isPuterModelOpen, setIsPuterModelOpen] = useState(false);
-  const [isOpenRouterModelOpen, setIsOpenRouterModelOpen] = useState(false);
-  const [modelSource, setModelSource] = useState<'puter' | 'openrouter'>(
-    localSettings.textModel.includes('dolphin-mistral-24b-venice') ? 'openrouter' : 'puter'
-  );
+  const [modelSearch, setModelSearch] = useState('');
+  const [isTextModelOpen, setIsTextModelOpen] = useState(false);
 
-  // Get all models
-  const ALL_PUTER_MODELS = getAllPuterModels();
-  const ALL_OPENROUTER_MODELS = getAllOpenRouterModels();
+  // Get all models including custom ones
+  const ALL_TEXT_MODELS = getAllTextModels();
   
   // Filter models based on search
-  const filteredPuterModels = ALL_PUTER_MODELS.filter((model: any) => 
-    model.name.toLowerCase().includes(puterModelSearch.toLowerCase()) ||
-    model.provider.toLowerCase().includes(puterModelSearch.toLowerCase()) ||
-    model.id.toLowerCase().includes(puterModelSearch.toLowerCase())
-  );
-  
-  const filteredOpenRouterModels = ALL_OPENROUTER_MODELS.filter((model: any) => 
-    model.name.toLowerCase().includes(openRouterModelSearch.toLowerCase()) ||
-    model.provider.toLowerCase().includes(openRouterModelSearch.toLowerCase()) ||
-    model.id.toLowerCase().includes(openRouterModelSearch.toLowerCase())
+  const filteredModels = ALL_TEXT_MODELS.filter((model: any) => 
+    model.name.toLowerCase().includes(modelSearch.toLowerCase()) ||
+    model.provider.toLowerCase().includes(modelSearch.toLowerCase()) ||
+    model.id.toLowerCase().includes(modelSearch.toLowerCase())
   );
 
   const handleSave = () => {
@@ -92,43 +79,19 @@ const SettingsPanel = ({
     }
   };
 
-  const handleAddCustomPuterModel = () => {
-    if (!customPuterModelInput.trim()) {
+  const handleAddCustomModel = () => {
+    if (!customModelInput.trim()) {
       toast.error('Please enter a model ID');
       return;
     }
 
-    const modelId = customPuterModelInput.trim();
+    const modelId = customModelInput.trim();
     const success = addCustomModel(modelId);
     
     if (success) {
       setCustomModels(getCustomModels());
-      setCustomPuterModelInput('');
-      toast.success(`Added custom Puter model: ${beautifyModelName(modelId)}`);
-    } else {
-      toast.error('Model already exists');
-    }
-  };
-
-  const handleAddCustomOpenRouterModel = () => {
-    if (!customOpenRouterModelInput.trim()) {
-      toast.error('Please enter a model ID');
-      return;
-    }
-
-    let modelId = customOpenRouterModelInput.trim();
-    
-    // Ensure it starts with openrouter: prefix
-    if (!modelId.startsWith('openrouter:')) {
-      modelId = `openrouter:${modelId}`;
-    }
-    
-    const success = addCustomModel(modelId);
-    
-    if (success) {
-      setCustomModels(getCustomModels());
-      setCustomOpenRouterModelInput('');
-      toast.success(`Added custom OpenRouter model: ${beautifyModelName(modelId)}`);
+      setCustomModelInput('');
+      toast.success(`Added custom model: ${beautifyModelName(modelId)}`);
     } else {
       toast.error('Model already exists');
     }
@@ -186,21 +149,21 @@ const SettingsPanel = ({
         </div>
       </Card>
 
-      {/* OpenRouter API Key Configuration */}
-      {modelSource === 'openrouter' && (
+      {/* Venice Uncensored Configuration */}
+      {localSettings.textModel.includes('dolphin-mistral-24b-venice') && (
         <Card className="p-6 space-y-4">
           <div>
-            <h2 className="text-xl font-semibold mb-2">OpenRouter API Configuration</h2>
+            <h2 className="text-xl font-semibold mb-2">Venice Uncensored Model Settings</h2>
             <p className="text-sm text-muted-foreground">
-              Configure your OpenRouter API key for Venice and custom OpenRouter models
+              Configure OpenRouter API for Venice uncensored model
             </p>
           </div>
           
           <div className="space-y-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
             <div className="space-y-2">
-              <Label htmlFor="openrouter-key">OpenRouter API Key (Required)</Label>
+              <Label htmlFor="venice-openrouter-key">OpenRouter API Key (Required for Venice)</Label>
               <Input
-                id="openrouter-key"
+                id="venice-openrouter-key"
                 type="password"
                 placeholder="sk-or-v1-..."
                 value={localSettings.customOpenRouterKey || ''}
@@ -217,64 +180,25 @@ const SettingsPanel = ({
         </Card>
       )}
 
-      {/* Model Source Selection */}
-      <Card className="p-6 space-y-6">
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Model Source</h2>
-          <p className="text-sm text-muted-foreground">Choose between Puter models or OpenRouter models (mutually exclusive)</p>
-        </div>
-
-        <div className="flex gap-4">
-          <Button
-            variant={modelSource === 'puter' ? 'default' : 'outline'}
-            onClick={() => {
-              setModelSource('puter');
-              // Reset to default Puter model
-              setLocalSettings({ ...localSettings, textModel: 'openrouter:openai/gpt-5' });
-            }}
-            className="flex-1"
-          >
-            Puter Models
-          </Button>
-          <Button
-            variant={modelSource === 'openrouter' ? 'default' : 'outline'}
-            onClick={() => {
-              setModelSource('openrouter');
-              // Reset to default OpenRouter model
-              setLocalSettings({ ...localSettings, textModel: 'openrouter:cognitivecomputations/dolphin-mistral-24b-venice-edition:free' });
-            }}
-            className="flex-1"
-          >
-            OpenRouter Models
-          </Button>
-        </div>
-      </Card>
-
       {/* Model Selection */}
       <Card className="p-6 space-y-6">
         <div>
-          <h2 className="text-xl font-semibold mb-2">
-            {modelSource === 'puter' ? 'Puter AI Models' : 'OpenRouter Models'}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {modelSource === 'puter' 
-              ? 'Select from available Puter models or add custom Puter models' 
-              : 'Select OpenRouter models or add custom free OpenRouter models'}
-          </p>
+          <h2 className="text-xl font-semibold mb-2">AI Models</h2>
+          <p className="text-sm text-muted-foreground">Choose your preferred AI models and configure parameters</p>
         </div>
 
-        {modelSource === 'puter' ? (
+        <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="puter-model">Puter Model</Label>
+            <Label htmlFor="text-model">Text Model (Standard)</Label>
             <Select
-              open={isPuterModelOpen}
-              onOpenChange={setIsPuterModelOpen}
+              open={isTextModelOpen}
+              onOpenChange={setIsTextModelOpen}
               value={localSettings.textModel}
               onValueChange={(value) =>
                 setLocalSettings({ ...localSettings, textModel: value })
               }
             >
-              <SelectTrigger id="puter-model" className="bg-input">
+              <SelectTrigger id="text-model" className="bg-input">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent
@@ -283,9 +207,9 @@ const SettingsPanel = ({
               >
                 <div className="px-2 pb-2 sticky top-0 bg-popover z-10">
                   <Input
-                    placeholder="Search Puter models..."
-                    value={puterModelSearch}
-                    onChange={(e) => setPuterModelSearch(e.target.value)}
+                    placeholder="Search models..."
+                    value={modelSearch}
+                    onChange={(e) => setModelSearch(e.target.value)}
                     onPointerDown={(e) => e.stopPropagation()}
                     onKeyDown={(e) => e.stopPropagation()}
                     onMouseDown={(e) => e.stopPropagation()}
@@ -295,27 +219,37 @@ const SettingsPanel = ({
                     className="h-8 text-sm"
                   />
                 </div>
-                {filteredPuterModels.filter((model: any) => !model.isCustom).length > 0 && (
+                {filteredModels.filter((model: any) => !model.isCustom && model.id.includes('venice')).length > 0 && (
                   <>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">⚡ Available Puter Models</div>
-                    {filteredPuterModels.filter((model: any) => !model.isCustom).map((model: any) => (
-                      <SelectItem key={model.id} value={model.id}>
-                        {model.name} ({model.provider})
-                      </SelectItem>
-                    ))}
-                  </>
-                )}
-                {filteredPuterModels.filter((model: any) => model.isCustom).length > 0 && (
-                  <>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">✨ Custom Puter Models</div>
-                    {filteredPuterModels.filter((model: any) => model.isCustom).map((model: any) => (
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">🐬 Uncensored Model (OpenRouter)</div>
+                    {filteredModels.filter((model: any) => !model.isCustom && model.id.includes('venice')).map((model: any) => (
                       <SelectItem key={model.id} value={model.id}>
                         {model.name}
                       </SelectItem>
                     ))}
                   </>
                 )}
-                {filteredPuterModels.length === 0 && (
+                {filteredModels.filter((model: any) => !model.isCustom && !model.id.includes('venice') && (model.id.includes('gpt-5') || model.id.includes('claude-sonnet-4.5') || model.id.includes('gemini-2.5-pro') || model.id.includes('deepseek-r1') || model.id.includes('grok-3') || model.id.includes('llama-4') || model.id.includes('qwen3-max') || model.id.includes('sonar-pro'))).length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">⚡ Featured Models (Puter JS)</div>
+                    {filteredModels.filter((model: any) => !model.isCustom && !model.id.includes('venice') && (model.id.includes('gpt-5') || model.id.includes('claude-sonnet-4.5') || model.id.includes('gemini-2.5-pro') || model.id.includes('deepseek-r1') || model.id.includes('grok-3') || model.id.includes('llama-4') || model.id.includes('qwen3-max') || model.id.includes('sonar-pro'))).map((model: any) => (
+                      <SelectItem key={model.id} value={model.id}>
+                        {model.name} ({model.provider})
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+                {filteredModels.filter((model: any) => !model.isCustom && !model.id.includes('venice') && !model.id.includes('gpt-5') && !model.id.includes('claude-sonnet-4.5') && !model.id.includes('gemini-2.5-pro') && !model.id.includes('deepseek-r1') && !model.id.includes('grok-3') && !model.id.includes('llama-4') && !model.id.includes('qwen3-max') && !model.id.includes('sonar-pro')).length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">🚀 Other Models (Puter JS)</div>
+                    {filteredModels.filter((model: any) => !model.isCustom && !model.id.includes('venice') && !model.id.includes('gpt-5') && !model.id.includes('claude-sonnet-4.5') && !model.id.includes('gemini-2.5-pro') && !model.id.includes('deepseek-r1') && !model.id.includes('grok-3') && !model.id.includes('llama-4') && !model.id.includes('qwen3-max') && !model.id.includes('sonar-pro')).map((model: any) => (
+                      <SelectItem key={model.id} value={model.id}>
+                        {model.name} ({model.provider})
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+                {filteredModels.length === 0 && (
                   <div className="px-2 py-4 text-sm text-muted-foreground text-center">
                     No models found
                   </div>
@@ -323,73 +257,37 @@ const SettingsPanel = ({
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              All Puter models use the Puter JS API
+              🐬 Venice model uses OpenRouter (requires API key). All others use Puter JS.
             </p>
           </div>
-        ) : (
+
           <div className="space-y-2">
-            <Label htmlFor="openrouter-model">OpenRouter Model</Label>
+            <Label htmlFor="custom-model-select">Text Model (Custom) ✨</Label>
             <Select
-              open={isOpenRouterModelOpen}
-              onOpenChange={setIsOpenRouterModelOpen}
-              value={localSettings.textModel}
+              value={customModels.includes(localSettings.textModel) ? localSettings.textModel : ''}
               onValueChange={(value) =>
                 setLocalSettings({ ...localSettings, textModel: value })
               }
             >
-              <SelectTrigger id="openrouter-model" className="bg-input">
-                <SelectValue />
+              <SelectTrigger id="custom-model-select" className="bg-input">
+                <SelectValue placeholder="Select custom model" />
               </SelectTrigger>
-              <SelectContent
-                className="max-h-[400px]"
-                onCloseAutoFocus={(e) => e.preventDefault()}
-              >
-                <div className="px-2 pb-2 sticky top-0 bg-popover z-10">
-                  <Input
-                    placeholder="Search OpenRouter models..."
-                    value={openRouterModelSearch}
-                    onChange={(e) => setOpenRouterModelSearch(e.target.value)}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    onFocusCapture={(e) => e.stopPropagation()}
-                    inputMode="search"
-                    className="h-8 text-sm"
-                  />
-                </div>
-                {filteredOpenRouterModels.filter((model: any) => !model.isCustom).length > 0 && (
-                  <>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">🐬 Available OpenRouter Models</div>
-                    {filteredOpenRouterModels.filter((model: any) => !model.isCustom).map((model: any) => (
-                      <SelectItem key={model.id} value={model.id}>
-                        {model.name}
-                      </SelectItem>
-                    ))}
-                  </>
-                )}
-                {filteredOpenRouterModels.filter((model: any) => model.isCustom).length > 0 && (
-                  <>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">✨ Custom OpenRouter Models</div>
-                    {filteredOpenRouterModels.filter((model: any) => model.isCustom).map((model: any) => (
-                      <SelectItem key={model.id} value={model.id}>
-                        {model.name}
-                      </SelectItem>
-                    ))}
-                  </>
-                )}
-                {filteredOpenRouterModels.length === 0 && (
-                  <div className="px-2 py-4 text-sm text-muted-foreground text-center">
-                    No models found
-                  </div>
+              <SelectContent className="max-h-[400px]">
+                {customModels.length === 0 ? (
+                  <SelectItem value="none" disabled>
+                    No custom models added yet
+                  </SelectItem>
+                ) : (
+                  customModels.map((modelId) => (
+                    <SelectItem key={modelId} value={modelId}>
+                      {beautifyModelName(modelId)}
+                    </SelectItem>
+                  ))
                 )}
               </SelectContent>
             </Select>
-            <p className="text-xs text-destructive font-medium">
-              ⚠️ Only FREE OpenRouter models work with your API key
-            </p>
           </div>
-        )}
+        </div>
 
         <div className="grid md:grid-cols-2 gap-6 pt-4">
           <div className="space-y-2">
@@ -416,82 +314,48 @@ const SettingsPanel = ({
 
         {/* Custom Model Management */}
         <div className="border-t border-border pt-6 space-y-4">
-          {modelSource === 'puter' ? (
-            <>
-              <div>
-                <Label className="text-base font-semibold">Add Custom Puter Model</Label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Add any custom model ID supported by Puter JS. These will use the Puter endpoint.
-                </p>
-              </div>
-              
-              <div className="flex gap-2">
-                <Input
-                  placeholder="model-name (e.g. custom-model-v1)"
-                  value={customPuterModelInput}
-                  onChange={(e) => setCustomPuterModelInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddCustomPuterModel()}
-                  className="bg-input flex-1"
-                />
-                <Button onClick={handleAddCustomPuterModel} className="glow-blue shrink-0">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Model
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <Label className="text-base font-semibold">Add Custom OpenRouter Model</Label>
-                <p className="text-xs text-destructive font-medium mt-1">
-                  ⚠️ Only add FREE OpenRouter models (e.g., model-name:free). Paid models will fail with rate limits.
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Enter the OpenRouter model ID. The "openrouter:" prefix will be added automatically.
-                </p>
-              </div>
-              
-              <div className="flex gap-2">
-                <Input
-                  placeholder="provider/model-name:free (e.g. moonshotai/kimi-k2:free)"
-                  value={customOpenRouterModelInput}
-                  onChange={(e) => setCustomOpenRouterModelInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddCustomOpenRouterModel()}
-                  className="bg-input flex-1"
-                />
-                <Button onClick={handleAddCustomOpenRouterModel} className="glow-blue shrink-0">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Model
-                </Button>
-              </div>
-            </>
-          )}
+          <div>
+            <Label className="text-base font-semibold">Add Custom Puter Model</Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Add any custom model ID supported by Puter JS. These will use the Puter endpoint.
+            </p>
+          </div>
+          
+          <div className="flex gap-2">
+            <Input
+              placeholder="model-name (e.g. custom-model-v1)"
+              value={customModelInput}
+              onChange={(e) => setCustomModelInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddCustomModel()}
+              className="bg-input flex-1"
+            />
+            <Button onClick={handleAddCustomModel} className="glow-blue shrink-0">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Model
+            </Button>
+          </div>
           
           {/* Custom Models List */}
-          {customModels.filter(id => modelSource === 'puter' ? !id.startsWith('openrouter:') : id.startsWith('openrouter:')).length > 0 && (
+          {customModels.length > 0 && (
             <div className="space-y-2">
-              <Label className="text-sm font-medium">
-                Your Custom {modelSource === 'puter' ? 'Puter' : 'OpenRouter'} Models ({customModels.filter(id => modelSource === 'puter' ? !id.startsWith('openrouter:') : id.startsWith('openrouter:')).length}):
-              </Label>
+              <Label className="text-sm font-medium">Your Custom Models ({customModels.length}):</Label>
               <div className="grid gap-2 max-h-[200px] overflow-y-auto">
-                {customModels
-                  .filter(id => modelSource === 'puter' ? !id.startsWith('openrouter:') : id.startsWith('openrouter:'))
-                  .map((modelId) => (
-                    <div
-                      key={modelId}
-                      className="flex items-center justify-between bg-secondary/50 hover:bg-secondary/70 transition-colors rounded-lg p-3 text-sm group"
+                {customModels.map((modelId) => (
+                  <div
+                    key={modelId}
+                    className="flex items-center justify-between bg-secondary/50 hover:bg-secondary/70 transition-colors rounded-lg p-3 text-sm group"
+                  >
+                    <span className="truncate flex-1 font-mono text-xs">{beautifyModelName(modelId)}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 ml-2 opacity-60 group-hover:opacity-100"
+                      onClick={() => handleRemoveCustomModel(modelId)}
                     >
-                      <span className="truncate flex-1 font-mono text-xs">{beautifyModelName(modelId)}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 ml-2 opacity-60 group-hover:opacity-100"
-                        onClick={() => handleRemoveCustomModel(modelId)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             </div>
           )}

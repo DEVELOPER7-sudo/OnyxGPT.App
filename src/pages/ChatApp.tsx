@@ -221,14 +221,17 @@ I'm your intelligent companion powered by cutting-edge AI models. Here's what I 
       .map((m) => ({ role: m.role, content: m.content }));
     let formattedMessages: any[] = [{ role: 'system', content: systemPrompt }, ...baseMessages];
 
+    // Remove 'openrouter:' prefix for Puter JS API - it expects clean model IDs
+    const cleanModelId = modelId.replace('openrouter:', '');
 
     // Only log in development
     if (import.meta.env.DEV && settings.enableDebugLogs) {
-      console.log('[DEBUG] Using model:', modelId);
+      console.log('[DEBUG] Original model:', modelId);
+      console.log('[DEBUG] Clean model for Puter:', cleanModelId);
       console.log('[DEBUG] webSearch:', webSearchEnabled, '| deepSearch:', deepSearchEnabled);
       console.log('[DEBUG] Messages:', JSON.stringify(formattedMessages, null, 2));
       console.log('[DEBUG] API Call params:', {
-        model: modelId,
+        model: cleanModelId,
         temperature: settings.temperature,
         max_tokens: settings.maxTokens,
       });
@@ -241,7 +244,7 @@ I'm your intelligent companion powered by cutting-edge AI models. Here's what I 
     const chatParams = {
       messages: formattedMessages,
       options: {
-        model: modelId,
+        model: cleanModelId,
         stream: true,
         temperature: settings.temperature,
         max_tokens: settings.maxTokens,
@@ -250,7 +253,7 @@ I'm your intelligent companion powered by cutting-edge AI models. Here's what I 
 
     try {
       const response = await puter.ai.chat(formattedMessages, {
-        model: modelId,
+        model: cleanModelId,
         stream: true,
         temperature: settings.temperature,
         max_tokens: settings.maxTokens,
@@ -442,15 +445,19 @@ I'm your intelligent companion powered by cutting-edge AI models. Here's what I 
     setAbortController(controller);
 
     const logger = createPuterAPILogger();
+    
+    // Remove 'openrouter:' prefix for Puter JS API
+    const cleanModelId = settings.textModel.replace('openrouter:', '');
 
     try {
       console.log('[Vision] Analyzing image(s):', imageUrl);
       console.log('[Vision] Prompt:', prompt);
-      console.log('[Vision] Using model:', settings.textModel);
+      console.log('[Vision] Original model:', settings.textModel);
+      console.log('[Vision] Clean model for Puter:', cleanModelId);
       
       // Use streaming for real-time response
       const response = await puter.ai.chat(prompt, imageUrl, {
-        model: settings.textModel,
+        model: cleanModelId,
         stream: true,
       });
 

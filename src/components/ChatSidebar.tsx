@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Trash2,
   FileText,
+  Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Chat } from '@/types/chat';
@@ -23,7 +24,7 @@ interface ChatSidebarProps {
   onNewChat: () => void;
   onSelectChat: (chatId: string) => void;
   onDeleteChat: (chatId: string) => Promise<void>;
-  onNavigate: (section: 'images' | 'memory' | 'search' | 'settings' | 'logs') => void;
+  onNavigate: (section: 'images' | 'memory' | 'search' | 'settings' | 'logs' | 'triggers') => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
 }
@@ -152,6 +153,15 @@ const ChatSidebar = ({
         >
           <Search className="w-5 h-5" />
           {!collapsed && <span className="ml-2">Search</span>}
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start hover:bg-sidebar-accent"
+          size={collapsed ? 'icon' : 'default'}
+          onClick={() => onNavigate('triggers')}
+        >
+          <Zap className="w-5 h-5" />
+          {!collapsed && <span className="ml-2">Triggers</span>}
         </Button>
         <Button
           variant="ghost"

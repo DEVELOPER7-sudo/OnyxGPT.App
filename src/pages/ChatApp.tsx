@@ -16,6 +16,7 @@ import MotionBackground from '@/components/MotionBackground';
 import { createPuterAPILogger } from '@/lib/api-logger';
 import { supabase } from '@/integrations/supabase/client';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
+import { detectTriggersAndBuildPrompt } from '@/lib/triggers';
 
 // Lazy load heavy components
 const SettingsPanel = lazy(() => import('@/components/SettingsPanel'));
@@ -23,6 +24,7 @@ const ImagesGallery = lazy(() => import('@/components/ImagesGallery'));
 const MemoryEditor = lazy(() => import('@/components/MemoryEditor'));
 const SearchPanel = lazy(() => import('@/components/SearchPanel'));
 const LogCenter = lazy(() => import('@/components/LogCenter'));
+const TriggerGallery = lazy(() => import('@/components/TriggerGallery'));
 
 const ChatApp = () => {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -31,7 +33,7 @@ const ChatApp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'chat' | 'images' | 'memory' | 'search' | 'settings' | 'logs'>('chat');
+  const [currentView, setCurrentView] = useState<'chat' | 'images' | 'memory' | 'search' | 'settings' | 'logs' | 'triggers'>('chat');
   const [webSearchEnabled, setWebSearchEnabled] = useState(settings.enableWebSearch);
   const [deepSearchEnabled, setDeepSearchEnabled] = useState(settings.enableDeepSearch);
   const [taskMode, setTaskMode] = useState<'standard' | 'reasoning' | 'research' | 'creative'>(settings.taskMode || 'standard');
@@ -217,12 +219,27 @@ I'm your intelligent companion powered by cutting-edge AI models. Here's what I 
       return;
     }
 
-    // Regular text-only flow with system prompt
-    const systemPrompt = `You are a helpful AI assistant. ${webSearchEnabled ? 'You may use web knowledge if your model supports it.' : ''} ${deepSearchEnabled ? 'Prefer deeper step-by-step reasoning when needed.' : ''}`.trim();
+    // Detect triggers and build system prompt
+    const { systemPrompt: triggerPrompt, detectedTriggers } = detectTriggersAndBuildPrompt(userText);
+    
+    // Build final system prompt with triggers
+    let finalSystemPrompt = triggerPrompt + ' ' + userText;
+    if (webSearchEnabled) {
+      finalSystemPrompt += '\n\nNote: You may use web knowledge if your model supports it.';
+    }
+    if (deepSearchEnabled) {
+      finalSystemPrompt += '\n\nNote: Prefer deeper step-by-step reasoning when needed.';
+    }
+    
+    // Log detected triggers in dev mode
+    if (import.meta.env.DEV && settings.enableDebugLogs && detectedTriggers.length > 0) {
+      console.log('[DEBUG] Detected triggers:', detectedTriggers);
+    }
+    
     const baseMessages = messages
       .filter((m) => typeof m.content === 'string' && m.content.trim().length > 0)
       .map((m) => ({ role: m.role, content: m.content }));
-    let formattedMessages: any[] = [{ role: 'system', content: systemPrompt }, ...baseMessages];
+    let formattedMessages: any[] = [{ role: 'system', content: finalSystemPrompt }, ...baseMessages];
 
     // Only log in development
     if (import.meta.env.DEV && settings.enableDebugLogs) {
@@ -318,11 +335,31 @@ I'm your intelligent companion powered by cutting-edge AI models. Here's what I 
   };
 
   const handleOpenRouterChat = async (messages: Message[], chatId: string) => {
-    const systemPrompt = `You are a helpful AI assistant. ${webSearchEnabled ? 'You may use web knowledge if your model supports it.' : ''} ${deepSearchEnabled ? 'Prefer deeper step-by-step reasoning when needed.' : ''}`.trim();
+    // Get user message for trigger detection
+    const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+    const userText = lastUser?.content ?? '';
+    
+    // Detect triggers and build system prompt
+    const { systemPrompt: triggerPrompt, detectedTriggers } = detectTriggersAndBuildPrompt(userText);
+    
+    // Build final system prompt with triggers
+    let finalSystemPrompt = triggerPrompt + ' ' + userText;
+    if (webSearchEnabled) {
+      finalSystemPrompt += '\n\nNote: You may use web knowledge if your model supports it.';
+    }
+    if (deepSearchEnabled) {
+      finalSystemPrompt += '\n\nNote: Prefer deeper step-by-step reasoning when needed.';
+    }
+    
+    // Log detected triggers in dev mode
+    if (import.meta.env.DEV && settings.enableDebugLogs && detectedTriggers.length > 0) {
+      console.log('[DEBUG] Detected triggers:', detectedTriggers);
+    }
+    
     const baseMessages = messages
       .filter((m) => typeof m.content === 'string' && m.content.trim().length > 0)
       .map((m) => ({ role: m.role, content: m.content }));
-    const formattedMessages = [{ role: 'system', content: systemPrompt }, ...baseMessages];
+    const formattedMessages = [{ role: 'system', content: finalSystemPrompt }, ...baseMessages];
 
     // Remove 'openrouter:' prefix for the actual API call
     const modelId = settings.textModel.replace('openrouter:', '');
@@ -763,6 +800,7 @@ I'm your intelligent companion powered by cutting-edge AI models. Here's what I 
             }} />
           )}
           {currentView === 'logs' && <LogCenter />}
+          {currentView === 'triggers' && <TriggerGallery />}
         </Suspense>
         </div>
       </div>

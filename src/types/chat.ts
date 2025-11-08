@@ -1,3 +1,5 @@
+import { Trigger } from './triggers';
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -6,6 +8,8 @@ export interface Message {
   imageUrl?: string;
   imagePrompt?: string;
   attachments?: string[];
+  triggers?: Trigger[];
+  metadata?: any; // Add this to store trigger metadata
 }
 
 export interface Chat {
@@ -49,6 +53,8 @@ export interface AppSettings {
   themeColor?: string;
   accentColor?: string;
   backgroundColor?: string;
+  sidebarColor?: string;
+  enableStreaming?: boolean;
   taskMode?: 'standard' | 'reasoning' | 'research' | 'creative';
   provider?: 'puter' | 'openrouter';
   customOpenRouterKey?: string;

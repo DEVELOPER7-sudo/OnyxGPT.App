@@ -7,6 +7,9 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { useVisionAI } from '@/hooks/useVisionAI';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
@@ -14,6 +17,8 @@ import { toast } from 'sonner';
 
 import LoadingDots from '@/components/LoadingDots';
 import WelcomeMessage from '@/components/WelcomeMessage';
+import TriggerBar from '@/components/TriggerBar';
+import TriggerSelector from '@/components/TriggerSelector';
 import {
   Send,
   Mic,
@@ -78,6 +83,7 @@ const ChatArea = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [expandedThinking, setExpandedThinking] = useState<Set<string>>(new Set());
+  const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -371,7 +377,17 @@ const ChatArea = ({
                     const isExpanded = expandedThinking.has(message.id);
                     
                     return (
-                      <>
+                      <div className="w-full">
+                        {/* Trigger Bar - Shows metadata for triggers used */}
+                        {message.triggers && message.triggers.length > 0 && (
+                          <div className="mb-3">
+                            <TriggerBar 
+                              triggers={message.triggers} 
+                              taggedSegments={message.taggedSegments}
+                            />
+                          </div>
+                        )}
+                        
                         {thinking && (
                           <div className="mb-3 border border-border rounded-lg overflow-hidden">
                             <button
@@ -392,7 +408,10 @@ const ChatArea = ({
                             {isExpanded && (
                               <div className="p-3 text-xs text-muted-foreground max-h-[300px] overflow-y-auto">
                                 <div className="prose prose-sm dark:prose-invert max-w-none">
-                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  <ReactMarkdown 
+                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                    rehypePlugins={[rehypeKatex]}
+                                  >
                                     {thinking}
                                   </ReactMarkdown>
                                 </div>
@@ -401,11 +420,14 @@ const ChatArea = ({
                           </div>
                         )}
                         <div className="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-hidden">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm, remarkMath]}
+                            rehypePlugins={[rehypeKatex]}
+                          >
                             {main || (isThinking ? '' : message.content)}
                           </ReactMarkdown>
                         </div>
-                      </>
+                      </div>
                     );
                   })()
                 ) : editingMessageId === message.id ? (
@@ -573,8 +595,12 @@ const ChatArea = ({
             </Button>
           </div>
 
-          {/* Advanced Menu */}
-          <div className="flex items-center justify-between">
+          {/* Trigger Selector & Advanced Menu */}
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <TriggerSelector 
+              selectedTriggers={selectedTriggers}
+              onTriggersChange={setSelectedTriggers}
+            />
             <Button
               variant="outline"
               size="sm"

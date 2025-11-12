@@ -14,6 +14,7 @@ import {
   Trash2,
   FileText,
   Zap,
+  Bot,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Chat } from '@/types/chat';
@@ -24,7 +25,7 @@ interface ChatSidebarProps {
   onNewChat: () => void;
   onSelectChat: (chatId: string) => void;
   onDeleteChat: (chatId: string) => Promise<void>;
-  onNavigate: (section: 'images' | 'memory' | 'search' | 'settings' | 'logs' | 'triggers') => void;
+  onNavigate: (section: 'images' | 'memory' | 'search' | 'settings' | 'logs' | 'triggers' | 'bots') => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
 }
@@ -162,6 +163,15 @@ const ChatSidebar = ({
         >
           <Zap className="w-5 h-5" />
           {!collapsed && <span className="ml-2">Triggers</span>}
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start hover:bg-sidebar-accent"
+          size={collapsed ? 'icon' : 'default'}
+          onClick={() => onNavigate('bots')}
+        >
+          <Bot className="w-5 h-5" />
+          {!collapsed && <span className="ml-2">Custom Bots</span>}
         </Button>
         <Button
           variant="ghost"

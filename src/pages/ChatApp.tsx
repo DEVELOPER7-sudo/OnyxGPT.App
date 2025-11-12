@@ -858,6 +858,16 @@ I'm your intelligent companion powered by cutting-edge AI models. Here's what I 
           )}
           {currentView === 'logs' && <LogCenter />}
           {currentView === 'triggers' && <TriggerGallery />}
+          {currentView === 'bots' && (
+            <CustomBotsManager 
+              onSelectBot={(bot) => {
+                toast.success(`Selected bot: ${bot.name}`, {
+                  description: 'Bot will be applied to new chats',
+                });
+                setCurrentView('chat');
+              }}
+            />
+          )}
         </Suspense>
         </div>
       </div>

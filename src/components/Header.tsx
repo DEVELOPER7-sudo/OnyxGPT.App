@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { User, LogOut, Menu, Coins } from 'lucide-react';
-import onyxLogo from '@/assets/onyx-logo.png';
 import { useEffect, useState } from 'react';
+
+const onyxLogo = 'https://abundant-yellow-ehhvuzr6hk.edgeone.app/IMG_20251112_182040.png';
 import {
   DropdownMenu,
   DropdownMenuContent,

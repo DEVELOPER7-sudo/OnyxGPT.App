@@ -613,25 +613,43 @@ export const parseTriggeredResponse = (content: string): {
   cleanContent: string;
   taggedSegments: Array<{ tag: string; content: string; startIndex: number; endIndex: number }>;
 } => {
+  if (!content || typeof content !== 'string') {
+    return { cleanContent: '', taggedSegments: [] };
+  }
+
   const taggedSegments: Array<{ tag: string; content: string; startIndex: number; endIndex: number }> = [];
   let cleanContent = content;
   
-  // Find all XML-style trigger tags
-  const tagRegex = /<(\w+)>(.*?)<\/\1>/gs;
+  // Find all XML-style trigger tags (both paired tags and self-closing)
+  // Match: <tag>content</tag> or <tag_name>content</tag_name>
+  // Pattern handles underscores in tag names (e.g., deep_research, fact_check)
+  const tagRegex = /<([a-zA-Z_][a-zA-Z0-9_]*?)>([\s\S]*?)<\/\1>/g;
   let match;
+  
+  // Reset regex state
+  tagRegex.lastIndex = 0;
   
   while ((match = tagRegex.exec(content)) !== null) {
     const [fullMatch, tagName, tagContent] = match;
     taggedSegments.push({
       tag: tagName,
-      content: tagContent,
+      content: tagContent.trim(),
       startIndex: match.index,
       endIndex: match.index + fullMatch.length,
     });
   }
   
-  // Remove tags from clean content but keep the content inside
-  cleanContent = content.replace(/<(\w+)>(.*?)<\/\1>/gs, '$2');
+  // Remove ALL trigger tags from clean content but keep the content inside
+  cleanContent = content.replace(/<([a-zA-Z_][a-zA-Z0-9_]*?)>([\s\S]*?)<\/\1>/g, (fullMatch, tagName, tagContent) => {
+    // Return just the content inside the tags
+    return tagContent.trim() + '\n\n';
+  });
+  
+  // Remove any remaining unclosed or orphaned tags
+  cleanContent = cleanContent.replace(/<\/?[a-zA-Z_][a-zA-Z0-9_]*?>/g, '');
+  
+  // Clean up extra whitespace
+  cleanContent = cleanContent.trim();
   
   return { cleanContent, taggedSegments };
 };

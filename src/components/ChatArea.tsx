@@ -213,12 +213,14 @@ const ChatArea = ({
     // If image is uploaded, pass it to parent with message
     if (uploadedImage) {
       const prompt = input.trim() || 'What do you see in this image?';
-      onSendMessage(prompt, { imageUrl: uploadedImage, prompt }, selectedTriggers);
+      onSendMessage(prompt, { imageUrl: uploadedImage, prompt });
       setInput('');
       setUploadedImage(null);
       if (chat) localStorage.removeItem(`draft_${chat.id}`);
     } else {
-      onSendMessage(input, undefined, selectedTriggers);
+      onSendMessage(input);
+        onSendMessage(input, undefined, selectedTriggers);
+        onSendMessage(prompt, { imageUrl: uploadedImage, prompt }, selectedTriggers);
       setInput('');
       if (chat) localStorage.removeItem(`draft_${chat.id}`);
     }

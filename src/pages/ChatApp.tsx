@@ -17,7 +17,6 @@ import { createPuterAPILogger, createOpenRouterAPILogger } from '@/lib/api-logge
 import { supabase } from '@/integrations/supabase/client';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { detectTriggersAndBuildPrompt, parseTriggeredResponse } from '@/lib/triggers';
-import { chatMessageSchema } from '@/lib/validation';
 
 // Lazy load heavy components
 const SettingsPanel = lazy(() => import('@/components/SettingsPanel'));
@@ -195,15 +194,9 @@ I'm your intelligent companion powered by cutting-edge AI models. Here's what I 
      
      if (!userText.trim()) return;
      
-     // SECURITY: Validate message using Zod schema
-     const validation = chatMessageSchema.safeParse({
-       content: userText,
-       role: 'user',
-     });
-     
-     if (!validation.success) {
-       const errorMsg = validation.error.errors[0]?.message || 'Invalid message format';
-       toast.error(errorMsg);
+     // Validate message length
+     if (userText.length > 10000) {
+       toast.error('Message too long (max 10,000 characters)');
        setIsLoading(false);
        return;
      }
@@ -407,19 +400,6 @@ I'm your intelligent companion powered by cutting-edge AI models. Here's what I 
      // Get user message for trigger detection
      const lastUser = [...messages].reverse().find((m) => m.role === 'user');
      const userText = lastUser?.content ?? '';
-     
-     // SECURITY: Validate message using Zod schema
-     const validation = chatMessageSchema.safeParse({
-       content: userText,
-       role: 'user',
-     });
-     
-     if (!validation.success) {
-       const errorMsg = validation.error.errors[0]?.message || 'Invalid message format';
-       toast.error(errorMsg);
-       setIsLoading(false);
-       return;
-     }
      
      // Detect triggers and build system prompt
      let { systemPrompt: triggerPrompt, detectedTriggers } = detectTriggersAndBuildPrompt(userText);

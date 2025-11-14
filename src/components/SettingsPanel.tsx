@@ -106,20 +106,20 @@ const SettingsPanel = ({
   };
 
   return (
-    <div className="h-screen w-full overflow-y-auto overflow-x-hidden">
+    <div className="h-screen w-full overflow-y-auto overflow-x-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="max-w-5xl mx-auto p-3 md:p-6 space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Configure your AI models, theme, and data preferences</p>
+      <div className="space-y-2 mb-8">
+        <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">Settings</h1>
+        <p className="text-muted-foreground text-lg">Configure your AI models, theme, and data preferences</p>
       </div>
 
       {/* Theme Customization */}
       <ThemeCustomizer settings={localSettings} onUpdateSettings={onUpdateSettings} />
 
       {/* Puter Account */}
-      <Card className="p-6 space-y-4">
+      <Card className="p-6 space-y-4 border-white/10 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-sm hover:border-primary/30 transition-all">
         <div>
-          <h2 className="text-xl font-semibold mb-2">Puter Account</h2>
+          <h2 className="text-2xl font-semibold mb-2 text-white">Puter Account</h2>
           <p className="text-sm text-muted-foreground">
             Sign in to a Puter account to use AI features. Get 400M free tokens per month per account.
           </p>

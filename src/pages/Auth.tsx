@@ -69,11 +69,16 @@ const Auth = () => {
   const handleGuestMode = async () => {
     try {
       setIsSubmitting(true);
-      localStorage.setItem('guestMode', 'true');
+      // SECURITY: Use Supabase anonymous auth instead of localStorage flag
+      // This gives guests a real auth.uid() and proper RLS enforcement
+      const { error } = await supabase.auth.signInAnonymously();
+      if (error) throw error;
+      
       toast.success('Guest session started');
       navigate('/chat');
     } catch (error) {
       toast.error('Failed to start guest session. Please try again.');
+      console.error('Guest auth error:', error);
     } finally {
       setIsSubmitting(false);
     }

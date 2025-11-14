@@ -1,10 +1,28 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('VITE_SUPABASE_URL') || '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+// SECURITY: Restrict CORS to specific domains to prevent unauthorized API access
+const getAllowedOrigins = (): string[] => {
+  const allowed = Deno.env.get('ALLOWED_ORIGINS');
+  if (allowed) {
+    return allowed.split(',').map(o => o.trim());
+  }
+  // Default to localhost for development
+  return ['http://localhost:5173', 'http://localhost:3000'];
+};
+
+const getCorsHeaders = (origin?: string): Record<string, string> => {
+  const allowedOrigins = getAllowedOrigins();
+  const isAllowed = origin && allowedOrigins.some(allowed => 
+    origin === allowed || 
+    (allowed === '*' && import.meta.env.DEV)
+  );
+  
+  return {
+    'Access-Control-Allow-Origin': isAllowed ? origin || '' : '',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
 };
 
 // Rate limiting: map of user_id -> { count, resetTime }
@@ -61,12 +79,26 @@ const verifyJWT = async (token: string): Promise<{ sub: string } | null> => {
 };
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       headers: corsHeaders,
       status: 204 
     });
+  }
+
+  // SECURITY: Verify origin is allowed
+  if (!corsHeaders['Access-Control-Allow-Origin']) {
+    return new Response(
+      JSON.stringify({ error: 'Origin not allowed' }),
+      {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 
   try {
@@ -88,6 +120,22 @@ serve(async (req) => {
     if (!userPayload) {
       return new Response(
         JSON.stringify({ error: 'Invalid or expired token' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // SECURITY: Reject anonymous tokens (user must be authenticated)
+    // Check if token is the anon key (it would fail getUser or have specific claims)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    
+    // If using anon key for verification, also check token isn't the anon key itself
+    if (token === supabaseAnonKey) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required. Please log in with your account.' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

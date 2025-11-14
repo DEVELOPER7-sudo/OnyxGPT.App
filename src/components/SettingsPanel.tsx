@@ -151,49 +151,39 @@ const SettingsPanel = ({
         </div>
       </Card>
 
-      {/* Venice Uncensored Info & OpenRouter API Key */}
+      {/* Venice Uncensored Info - API Key Setup Instructions */}
       <Card className="p-6 space-y-4 bg-blue-500/5 border-blue-500/20">
         <div>
           <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
             🐬 Venice Uncensored Model & OpenRouter API
           </h2>
           <p className="text-sm text-muted-foreground">
-            Configure your OpenRouter API key for accessing Venice and other uncensored models securely.
+            To use Venice and other OpenRouter models, configure your API key server-side.
           </p>
         </div>
         
         <div className="space-y-3">
           <p className="text-sm">
             ✅ <strong>Uncensored responses</strong> - No content filtering<br/>
-            ✅ <strong>Server-side encryption</strong> - API keys encrypted at rest<br/>
+            ✅ <strong>Server-side configuration</strong> - API keys managed securely<br/>
             ✅ <strong>Secure transmission</strong> - HTTPS only communication
           </p>
         </div>
 
-        {/* OpenRouter API Key Input */}
+        {/* Setup Instructions */}
         <div className="border-t border-blue-500/20 pt-4 space-y-4">
-          <div>
-            <Label htmlFor="openrouter-key" className="text-base font-medium">OpenRouter API Key</Label>
-            <p className="text-xs text-muted-foreground mt-1">
-              Your API key is encrypted and stored securely on the server. It's never exposed to the browser.
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <Input
-              id="openrouter-key"
-              type="password"
-              placeholder="sk-or-v1-..."
-              value={localSettings.customOpenRouterKey || ''}
-              onChange={(e) =>
-                setLocalSettings({ ...localSettings, customOpenRouterKey: e.target.value })
-              }
-              className="bg-input font-mono text-sm"
-            />
-            <p className="text-xs text-muted-foreground flex items-start gap-2">
-              <span>🔒</span>
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 space-y-3">
+            <p className="text-sm font-medium">Setup Instructions:</p>
+            <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside">
+              <li>Create an account at <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">openrouter.ai</a></li>
+              <li>Get your API key from your OpenRouter account settings</li>
+              <li>Add your OpenRouter API key to your server environment variable: <code className="bg-background/50 px-2 py-1 rounded text-xs">OPENROUTER_API_KEY</code></li>
+              <li>Redeploy your application with the configured key</li>
+            </ol>
+            <p className="text-xs text-orange-600 flex items-start gap-2 mt-3">
+              <span>⚠️</span>
               <span>
-                Get your free API key from <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">openrouter.ai</a>. Your key will be securely transmitted to our server and encrypted.
+                <strong>Never share your API key</strong> or add it in client-side code. Keys must be configured on your server only.
               </span>
             </p>
           </div>

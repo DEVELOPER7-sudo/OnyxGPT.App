@@ -297,6 +297,13 @@ See `capacitor.config.ts` for app settings:
 - **Export Control**: Full data ownership
 - **Secure Storage**: Encrypted local storage
 - **Authentication**: Supabase Auth for cloud features
+- **Input Validation**: All user inputs validated with Zod schemas
+- **Rate Limiting**: 50 requests/hour per user on API endpoints
+- **CORS Protection**: Restricted to authorized origins only
+- **No Client-Side Secrets**: API keys stored server-side only
+- **XSS Protection**: Safe markdown rendering, no dangerous HTML
+
+**See [SECURITY.md](./SECURITY.md) for comprehensive security documentation.**
 
 ---
 

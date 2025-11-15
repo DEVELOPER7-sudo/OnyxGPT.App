@@ -1,11 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('VITE_SUPABASE_URL') || '*',
+// Restrict CORS to authorized origins
+const ALLOWED_ORIGINS = [
+  'https://onyxgpt.lovable.app',
+  'http://localhost:5173', // For development
+  'http://localhost:3000',  // For development
+];
+
+const corsHeaders = (origin?: string) => ({
+  'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin || '') ? origin : '',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+});
 
 // Rate limiting: map of user_id -> { count, resetTime }
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -61,10 +68,13 @@ const verifyJWT = async (token: string): Promise<{ sub: string } | null> => {
 };
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const headers = corsHeaders(origin);
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
-      headers: corsHeaders,
+      headers,
       status: 204 
     });
   }
@@ -77,7 +87,7 @@ serve(async (req) => {
         JSON.stringify({ error: 'Missing authorization header' }),
         {
           status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         }
       );
     }
@@ -90,7 +100,7 @@ serve(async (req) => {
         JSON.stringify({ error: 'Invalid or expired token' }),
         {
           status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         }
       );
     }
@@ -106,7 +116,7 @@ serve(async (req) => {
         {
           status: 429,
           headers: { 
-            ...corsHeaders, 
+            ...headers, 
             'Content-Type': 'application/json',
             'Retry-After': String(Math.ceil((rateLimit.resetTime - Date.now()) / 1000)),
           },
@@ -116,8 +126,8 @@ serve(async (req) => {
 
     const { messages, model, temperature, max_tokens } = await req.json();
     
-    // Use custom API key if provided, otherwise use default
-    const OPENROUTER_API_KEY = customApiKey || Deno.env.get('OPENROUTER_API_KEY');
+    // Use OpenRouter API key from server environment
+    const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
 
     if (!OPENROUTER_API_KEY) {
       throw new Error('OpenRouter API key not configured');
@@ -126,7 +136,7 @@ serve(async (req) => {
     console.log('OpenRouter request:', { 
       model, 
       messageCount: messages.length,
-      usingCustomKey: !!customApiKey 
+      userId: userPayload.sub,
     });
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -156,7 +166,7 @@ serve(async (req) => {
           JSON.stringify({ error: 'Rate limit exceeded. Please wait before trying again.' }),
           {
             status: 429,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: { ...headers, 'Content-Type': 'application/json' },
           }
         );
       }
@@ -166,7 +176,7 @@ serve(async (req) => {
           JSON.stringify({ error: 'Payment required. OpenRouter credits exhausted.' }),
           {
             status: 402,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: { ...headers, 'Content-Type': 'application/json' },
           }
         );
       }
@@ -177,7 +187,7 @@ serve(async (req) => {
     // Return the streaming response with rate limit headers
     return new Response(response.body, {
       headers: {
-        ...corsHeaders,
+        ...headers,
         'Content-Type': 'text/event-stream',
         'X-RateLimit-Remaining': String(rateLimit.remaining),
         'X-RateLimit-Reset': String(rateLimit.resetTime),
@@ -191,7 +201,7 @@ serve(async (req) => {
       {
         status: 500,
         headers: { 
-          ...corsHeaders, 
+          ...headers, 
           'Content-Type': 'application/json',
         },
       }

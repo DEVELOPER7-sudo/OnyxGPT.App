@@ -111,8 +111,15 @@ const ChatApp = () => {
        timestamp: Date.now(),
      };
 
-     // Generate chat title: if botName provided, use format "botName:new chat"
-     const chatTitle = botName ? `${botName}:new chat` : 'New Chat';
+     // Generate chat title: if botName provided, use that; otherwise "New Chat At [timestamp]"
+     const timestamp = new Date().toLocaleString('en-US', { 
+       month: 'short', 
+       day: 'numeric', 
+       hour: '2-digit', 
+       minute: '2-digit',
+       hour12: true 
+     });
+     const chatTitle = botName ? botName : `New Chat At ${timestamp}`;
 
      const newChat: Chat = {
        id: Date.now().toString(),

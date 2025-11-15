@@ -587,7 +587,25 @@ const ChatApp = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response from OpenRouter');
+        // Read and parse the error response
+        const errorText = await response.text();
+        let errorMessage = 'Failed to get response from OpenRouter';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        if (settings.enableDebugLogs) {
+          console.error('[DEBUG] OpenRouter error response:', {
+            status: response.status,
+            error: errorMessage,
+          });
+        }
+        
+        throw new Error(errorMessage);
       }
 
       let fullResponse = '';

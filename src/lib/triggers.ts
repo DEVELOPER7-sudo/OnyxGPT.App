@@ -639,17 +639,16 @@ export const parseTriggeredResponse = (content: string): {
     });
   }
   
-  // Remove ALL trigger tags from clean content but keep the content inside
-  cleanContent = content.replace(/<([a-zA-Z_][a-zA-Z0-9_]*?)>([\s\S]*?)<\/\1>/g, (fullMatch, tagName, tagContent) => {
-    // Return just the content inside the tags
-    return tagContent.trim() + '\n\n';
-  });
+  // Remove ALL trigger tags from clean content (don't include the content)
+  cleanContent = content.replace(/<([a-zA-Z_][a-zA-Z0-9_]*?)>([\s\S]*?)<\/\1>/g, '');
   
   // Remove any remaining unclosed or orphaned tags
   cleanContent = cleanContent.replace(/<\/?[a-zA-Z_][a-zA-Z0-9_]*?>/g, '');
   
-  // Clean up extra whitespace
-  cleanContent = cleanContent.trim();
+  // Clean up extra whitespace and newlines
+  cleanContent = cleanContent
+    .replace(/\n\n\n+/g, '\n\n') // Remove excessive newlines
+    .trim();
   
   return { cleanContent, taggedSegments };
 };

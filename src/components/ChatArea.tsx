@@ -118,12 +118,12 @@ const ChatArea = ({
   };
 
   const scrollToBottom = (instant = false) => {
-    if (bottomRef.current) {
+    if (bottomRef.current && !userHasScrolled.current) {
       bottomRef.current.scrollIntoView({ behavior: instant ? 'auto' : 'smooth', block: 'end' });
     }
   };
 
-  // Detect user scrolling - only prevent auto-scroll if scrolling UP while not loading
+  // Detect user scrolling - allow free scrolling at all times
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
@@ -131,16 +131,15 @@ const ChatArea = ({
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
       const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
-      // Only lock scroll if user scrolls up AND AI is not generating
-      userHasScrolled.current = !isAtBottom && !isLoading;
+      userHasScrolled.current = !isAtBottom;
       setShowScrollBottom(!isAtBottom);
     };
 
     scrollContainer.addEventListener('scroll', handleScroll);
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
-  }, [isLoading]);
+  }, []);
 
-  // Allow free scrolling - disable auto-scroll when user scrolls up (but not during generation)
+  // Detect wheel scrolling - maintain user's scroll position
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
@@ -148,17 +147,12 @@ const ChatArea = ({
     const handleWheel = () => {
       const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
       const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
-      // Never lock scroll during AI generation
-      if (!isAtBottom && !isLoading) {
-        userHasScrolled.current = true;
-      } else if (isLoading) {
-        userHasScrolled.current = false;
-      }
+      userHasScrolled.current = !isAtBottom;
     };
 
     scrollContainer.addEventListener('wheel', handleWheel, { passive: true });
     return () => scrollContainer.removeEventListener('wheel', handleWheel);
-  }, [isLoading]);
+  }, []);
 
   // Reset scroll lock when chat changes or new message from user
   useEffect(() => {
@@ -167,29 +161,29 @@ const ChatArea = ({
     scrollToBottom(true);
   }, [chat?.id]);
 
-  // Auto-scroll to bottom during AI generation OR when new user message arrives
+  // Auto-scroll only when new messages arrive and user is at bottom
   useEffect(() => {
     const messageCount = chat?.messages.length || 0;
     const isNewUserMessage = messageCount > lastMessageCount.current;
     
-    // Always scroll on new user message
+    // Scroll on new user message (reset scroll lock)
     if (isNewUserMessage) {
       userHasScrolled.current = false;
       scrollToBottom();
-    } else if (isLoading) {
-      // During AI generation, always scroll to bottom regardless of scroll history
+    } else if (isLoading && !userHasScrolled.current) {
+      // During AI generation, only scroll if user hasn't scrolled up
       scrollToBottom();
     }
     
     lastMessageCount.current = messageCount;
   }, [chat?.messages, isLoading]);
 
-  // MutationObserver for streaming content during loading
+  // MutationObserver for streaming content - only auto-scroll if user is at bottom
   useEffect(() => {
     if (!scrollRef.current) return;
     const observer = new MutationObserver(() => {
-      // During loading, always scroll to bottom for streaming content
-      if (isLoading) {
+      // Only auto-scroll during streaming if user hasn't scrolled up
+      if (isLoading && !userHasScrolled.current) {
         scrollToBottom();
       }
     });

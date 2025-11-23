@@ -27,7 +27,17 @@ export const TRIGGER_TAG_ENFORCEMENT_PREFIX = `You MUST structure your response 
    - <fact_check> - for verifying facts
    - <brainstorm> - for creative ideation
 
-**IMPORTANT:** These tags help the user see your thinking process clearly. Use them liberally!`;
+**IMPORTANT:** These tags help the user see your thinking process clearly. Use them liberally!
+
+**TRIGGER EXECUTION AND CLOSURE PROTOCOL:**
+- When a trigger is activated, perform the specific work defined by that trigger's instructions completely
+- Continue gathering relevant information, insights, and analysis throughout your response
+- After completing the main trigger work and collecting sufficient information, explicitly mark the end of that work phase with clear closure
+- At the end of your complete response, ALWAYS provide a **FINAL TRIGGER SUMMARY** section that:
+  * Lists all triggers that were activated and used during this conversation/response
+  * Explains how each trigger shaped your thinking and response structure
+  * Summarizes the key contributions or outcomes from each trigger's work
+  * Highlights any cross-trigger insights or synergies that emerged from using multiple triggers together`;
 
 export const ENHANCED_SYSTEM_PROMPT_TEMPLATE = (basePrompt: string) => {
   return `${TRIGGER_TAG_ENFORCEMENT_PREFIX}

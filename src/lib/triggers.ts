@@ -6,6 +6,7 @@ export interface TriggerMetadata {
   purpose: string;
   context_used: string;
   influence_scope: string;
+  custom?: boolean;
 }
 
 export interface Trigger {
@@ -565,6 +566,7 @@ export const generateTriggerMetadata = (trigger: Trigger, userPrompt: string): T
     purpose: trigger.system_instruction.replace(/Use tags.*?final_response\.\s*/i, '').trim(),
     context_used: `Applied to user prompt: "${userPrompt.substring(0, 100)}${userPrompt.length > 100 ? '...' : ''}"`,
     influence_scope: `Affects response structure, tone, and content based on ${trigger.category.toLowerCase()} requirements.`,
+    custom: trigger.custom ?? false,
   };
 };
 

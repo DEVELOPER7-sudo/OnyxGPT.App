@@ -62,7 +62,7 @@ const CollapsibleTriggerTag = ({
   tagName,
   content,
   category,
-  autoExpand = true,
+  autoExpand = false,
   onCopy,
 }: CollapsibleTriggerTagProps) => {
   const [isExpanded, setIsExpanded] = useState(autoExpand);

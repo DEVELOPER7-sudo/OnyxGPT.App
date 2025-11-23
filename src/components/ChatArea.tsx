@@ -22,6 +22,7 @@ import WelcomeMessage from '@/components/WelcomeMessage';
 import TriggerBar from '@/components/TriggerBar';
 import TriggerTagWrapper from '@/components/TriggerTagWrapper';
 import CollapsibleTriggerTag from '@/components/CollapsibleTriggerTag';
+import InlineTriggerBar from '@/components/InlineTriggerBar';
 import { BookmarkButton } from '@/components/BookmarkButton';
 import {
   Send,
@@ -369,20 +370,40 @@ const ChatArea = ({
                           </Card>
                         )}
                         
-                        {/* Wrapped trigger tags - Using Collapsible Component */}
+                        {/* Wrapped trigger tags with inline bars - Immediately displayed and initially collapsed */}
                          {message.taggedSegments && message.taggedSegments.length > 0 ? (
                            <>
                              {message.taggedSegments.map((segment, idx) => {
                                const trigger = message.triggers?.find(t => t.tag === segment.tag);
+                               const isCustom = trigger?.metadata?.custom ?? false;
                                return (
-                                 <CollapsibleTriggerTag
-                                   key={`${message.id}-${segment.tag}-${idx}`}
-                                   tagName={segment.tag}
-                                   content={segment.content}
-                                   category={trigger?.category}
-                                   autoExpand={true}
-                                   onCopy={() => {}}
-                                 />
+                                 <div key={`${message.id}-${segment.tag}-${idx}`}>
+                                   {/* Inline Trigger Bar - Immediately visible, initially collapsed */}
+                                   {trigger && (
+                                     <InlineTriggerBar
+                                       trigger={trigger}
+                                       isCustom={isCustom}
+                                       onCopy={() => {
+                                         const textToCopy = `<${segment.tag}>\n${segment.content}\n</${segment.tag}>`;
+                                         navigator.clipboard.writeText(textToCopy);
+                                         toast.success(`Copied ${segment.tag} content to clipboard`);
+                                       }}
+                                     />
+                                   )}
+                                   {/* Tagged Content Display */}
+                                   <CollapsibleTriggerTag
+                                     key={`${message.id}-${segment.tag}-${idx}`}
+                                     tagName={segment.tag}
+                                     content={segment.content}
+                                     category={trigger?.category}
+                                     autoExpand={false}
+                                     onCopy={() => {
+                                       const textToCopy = `<${segment.tag}>\n${segment.content}\n</${segment.tag}>`;
+                                       navigator.clipboard.writeText(textToCopy);
+                                       toast.success(`Copied ${segment.tag} content to clipboard`);
+                                     }}
+                                   />
+                                 </div>
                                );
                              })}
                              {/* Show any remaining content after all tags */}

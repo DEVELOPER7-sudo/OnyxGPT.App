@@ -19,10 +19,7 @@ import { toast } from 'sonner';
 
 import LoadingDots from '@/components/LoadingDots';
 import WelcomeMessage from '@/components/WelcomeMessage';
-import TriggerBar from '@/components/TriggerBar';
-import TriggerTagWrapper from '@/components/TriggerTagWrapper';
 import CollapsibleTriggerTag from '@/components/CollapsibleTriggerTag';
-import InlineTriggerBar from '@/components/InlineTriggerBar';
 import { BookmarkButton } from '@/components/BookmarkButton';
 import {
   Send,
@@ -319,16 +316,6 @@ const ChatArea = ({
                     
                     return (
                       <div className="w-full">
-                        {/* Trigger Bar - Shows metadata for triggers used */}
-                        {message.triggers && message.triggers.length > 0 && (
-                          <div className="mb-3">
-                            <TriggerBar 
-                              triggers={message.triggers} 
-                              taggedSegments={message.taggedSegments}
-                            />
-                          </div>
-                        )}
-                        
                         {thinking && (
                           <Card className="my-4 p-4 border-2 border-indigo-500/30 bg-indigo-500/5 transition-all duration-200 hover:shadow-lg">
                             <button
@@ -370,42 +357,26 @@ const ChatArea = ({
                           </Card>
                         )}
                         
-                        {/* Wrapped trigger tags with inline bars - Immediately displayed and initially collapsed */}
-                         {message.taggedSegments && message.taggedSegments.length > 0 ? (
-                           <>
-                             {message.taggedSegments.map((segment, idx) => {
-                               const trigger = message.triggers?.find(t => t.tag === segment.tag);
-                               const isCustom = trigger?.metadata?.custom ?? false;
-                               return (
-                                 <div key={`${message.id}-${segment.tag}-${idx}`}>
-                                   {/* Inline Trigger Bar - Immediately visible, initially collapsed */}
-                                   {trigger && (
-                                     <InlineTriggerBar
-                                       trigger={trigger}
-                                       isCustom={isCustom}
-                                       onCopy={() => {
-                                         const textToCopy = `<${segment.tag}>\n${segment.content}\n</${segment.tag}>`;
-                                         navigator.clipboard.writeText(textToCopy);
-                                         toast.success(`Copied ${segment.tag} content to clipboard`);
-                                       }}
-                                     />
-                                   )}
-                                   {/* Tagged Content Display */}
-                                   <CollapsibleTriggerTag
-                                     key={`${message.id}-${segment.tag}-${idx}`}
-                                     tagName={segment.tag}
-                                     content={segment.content}
-                                     category={trigger?.category}
-                                     autoExpand={false}
-                                     onCopy={() => {
-                                       const textToCopy = `<${segment.tag}>\n${segment.content}\n</${segment.tag}>`;
-                                       navigator.clipboard.writeText(textToCopy);
-                                       toast.success(`Copied ${segment.tag} content to clipboard`);
-                                     }}
-                                   />
-                                 </div>
-                               );
-                             })}
+                        {/* Collapsible trigger tags - only showing tagged content */}
+                          {message.taggedSegments && message.taggedSegments.length > 0 ? (
+                            <>
+                              {message.taggedSegments.map((segment, idx) => {
+                                const trigger = message.triggers?.find(t => t.tag === segment.tag);
+                                return (
+                                  <CollapsibleTriggerTag
+                                    key={`${message.id}-${segment.tag}-${idx}`}
+                                    tagName={segment.tag}
+                                    content={segment.content}
+                                    category={trigger?.category}
+                                    autoExpand={false}
+                                    onCopy={() => {
+                                      const textToCopy = `<${segment.tag}>\n${segment.content}\n</${segment.tag}>`;
+                                      navigator.clipboard.writeText(textToCopy);
+                                      toast.success(`Copied ${segment.tag} content to clipboard`);
+                                    }}
+                                  />
+                                );
+                              })}
                              {/* Show any remaining content after all tags */}
                              {main && main.trim() && (
                                <div className="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-hidden mt-4">

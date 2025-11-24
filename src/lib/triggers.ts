@@ -678,23 +678,30 @@ export const parseTriggeredResponse = (content: string): {
   }
   
   // Also detect IMMEDIATELY OPENED trigger tags (for real-time display)
-  // Pattern: <validtag> at start, content streaming, no closing tag yet
-  for (const tag of VALID_TRIGGER_TAGS) {
-    const openingTagPattern = new RegExp(`<${tag}>([\\s\\S]*)$`);
-    const openMatch = openingTagPattern.exec(content);
+  // Pattern: <validtag> with content streaming, no closing tag yet
+  // Detect any opening tag that doesn't have a corresponding closing tag
+  const allOpeningsRegex = /<([a-zA-Z_][a-zA-Z0-9_]*)>/g;
+  let openingMatch;
+  
+  while ((openingMatch = allOpeningsRegex.exec(content)) !== null) {
+    const tagName = openingMatch[1];
+    const closingTag = `</${tagName}>`;
     
-    if (openMatch && !isInsideCodeBlock(content, openMatch.index)) {
-      // Check if this tag is not already in taggedSegments (with closing tag)
-      const alreadyExists = taggedSegments.some(seg => seg.tag === tag && seg.endIndex > openMatch.index);
+    // Only process valid trigger tags
+    if (isValidTriggerTag(tagName) && !isInsideCodeBlock(content, openingMatch.index)) {
+      // Check if this tag has a closing counterpart and if it's not already in taggedSegments
+      const hasClosingTag = content.includes(closingTag);
+      const alreadyExists = taggedSegments.some(seg => seg.tag === tagName);
       
-      if (!alreadyExists) {
+      if (!hasClosingTag && !alreadyExists) {
         // This is an opening tag without a closing tag - capture it immediately
-        const openingIndex = openMatch.index;
-        const contentAfterTag = openMatch[1];
+        const openingIndex = openingMatch.index;
+        const openingTagEnd = openingMatch.index + openingMatch[0].length;
+        const contentAfterTag = content.substring(openingTagEnd).trim();
         
         taggedSegments.push({
-          tag,
-          content: contentAfterTag.trim(),
+          tag: tagName,
+          content: contentAfterTag,
           startIndex: openingIndex,
           endIndex: content.length,
         });

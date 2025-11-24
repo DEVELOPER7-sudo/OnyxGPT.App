@@ -30,6 +30,22 @@ export interface DetectedTrigger {
 
 const STORAGE_KEY = 'onyxgpt_triggers';
 
+// List of valid trigger tags that the system recognizes
+export const VALID_TRIGGER_TAGS = [
+  'reason', 'analyze', 'critique', 'debate', 'compare', 'contrast', 'deduce', 'evaluate', 'justify',
+  'hypothesize', 'examine', 'interpret', 'verify', 'reflect', 'infer', 'explore', 'discuss', 'validate',
+  'assess', 'troubleshoot', 'search', 'deep_research', 'fact_check', 'contextualize', 'summarize',
+  'outline', 'extract', 'highlight', 'define', 'explain', 'describe', 'cite', 'reference', 'clarify',
+  'expand', 'compress', 'plan', 'roadmap', 'checklist', 'organize', 'prioritize', 'schedule', 'brainstorm',
+  'propose', 'structure', 'map', 'draft', 'improve', 'review', 'simplify', 'formalize', 'rephrase',
+  'rewrite', 'summarize_for_kids', 'persuasive', 'informative', 'neutral', 'balanced', 'empathetic'
+];
+
+// Helper function to check if a tag is valid
+export const isValidTriggerTag = (tagName: string): boolean => {
+  return VALID_TRIGGER_TAGS.includes(tagName.toLowerCase());
+};
+
 // Built-in triggers organized by category
 const BUILT_IN_TRIGGERS: Trigger[] = [
   /* ---------------------------- Reasoning & Analysis ---------------------------- */
@@ -611,7 +627,7 @@ export const detectTriggersAndBuildPrompt = (userMessage: string): {
   return { systemPrompt, detectedTriggers };
 };
 
-// Parse trigger tags from AI response
+// Parse trigger tags from AI response - ONLY extract valid registered triggers
 export const parseTriggeredResponse = (content: string): {
   cleanContent: string;
   taggedSegments: Array<{ tag: string; content: string; startIndex: number; endIndex: number }>;
@@ -623,7 +639,7 @@ export const parseTriggeredResponse = (content: string): {
   const taggedSegments: Array<{ tag: string; content: string; startIndex: number; endIndex: number }> = [];
   let cleanContent = content;
   
-  // Find all XML-style trigger tags (both paired tags and self-closing)
+  // Find all XML-style trigger tags - ONLY valid registered triggers
   // Match: <tag>content</tag> or <tag_name>content</tag_name>
   // Pattern handles underscores in tag names (e.g., deep_research, fact_check)
   const tagRegex = /<([a-zA-Z_][a-zA-Z0-9_]*?)>([\s\S]*?)<\/\1>/g;
@@ -634,19 +650,33 @@ export const parseTriggeredResponse = (content: string): {
   
   while ((match = tagRegex.exec(content)) !== null) {
     const [fullMatch, tagName, tagContent] = match;
-    taggedSegments.push({
-      tag: tagName,
-      content: tagContent.trim(),
-      startIndex: match.index,
-      endIndex: match.index + fullMatch.length,
-    });
+    // ONLY include valid registered trigger tags
+    if (isValidTriggerTag(tagName)) {
+      taggedSegments.push({
+        tag: tagName,
+        content: tagContent.trim(),
+        startIndex: match.index,
+        endIndex: match.index + fullMatch.length,
+      });
+    }
   }
   
-  // Remove ALL trigger tags from clean content (don't include the content)
-  cleanContent = content.replace(/<([a-zA-Z_][a-zA-Z0-9_]*?)>([\s\S]*?)<\/\1>/g, '');
+  // Remove ONLY valid trigger tags from clean content
+  // First, remove all valid registered trigger tags with their content
+  cleanContent = content;
+  for (const tag of VALID_TRIGGER_TAGS) {
+    const regex = new RegExp(`<${tag}>[\\s\\S]*?<\/${tag}>`, 'g');
+    cleanContent = cleanContent.replace(regex, '');
+  }
   
-  // Remove any remaining unclosed or orphaned tags
-  cleanContent = cleanContent.replace(/<\/?[a-zA-Z_][a-zA-Z0-9_]*?>/g, '');
+  // Remove any remaining unclosed valid trigger tags (orphaned opening/closing tags)
+  // Only remove tags that are in the VALID_TRIGGER_TAGS list
+  for (const tag of VALID_TRIGGER_TAGS) {
+    const openingRegex = new RegExp(`<${tag}>`, 'g');
+    const closingRegex = new RegExp(`</${tag}>`, 'g');
+    cleanContent = cleanContent.replace(openingRegex, '');
+    cleanContent = cleanContent.replace(closingRegex, '');
+  }
   
   // Clean up extra whitespace and newlines
   cleanContent = cleanContent

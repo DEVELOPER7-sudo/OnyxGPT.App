@@ -5,35 +5,31 @@
 
 export const TRIGGER_TAG_ENFORCEMENT_PREFIX = `You MUST structure your response using XML-style trigger tags for specific task types.
 
+**VALID TRIGGER TAGS - ONLY use these:**
+reason, analyze, critique, debate, compare, contrast, deduce, evaluate, justify, hypothesize, examine, interpret, verify, reflect, infer, explore, discuss, validate, assess, troubleshoot, search, deep_research, fact_check, contextualize, summarize, outline, extract, highlight, define, explain, describe, cite, reference, clarify, expand, compress, plan, roadmap, checklist, organize, prioritize, schedule, brainstorm, propose, structure, map, draft, improve, review, simplify, formalize, rephrase, rewrite, summarize_for_kids, persuasive, informative, neutral, balanced, empathetic
+
 **CRITICAL RULES:**
-1. When performing reasoning, analysis, research, planning, or specialized tasks, ALWAYS wrap the relevant section in appropriate XML tags
+1. ONLY use the registered trigger tags listed above - NO OTHER TAGS
 2. Each tag MUST be properly closed: <tagname>content</tagname>
-3. Use lowercase tag names with underscores for multi-word tags: <deep_research>, <fact_check>, <step_by_step>
-4. Include a brief description of what you're doing BEFORE or WITHIN the tag
+3. Use lowercase tag names with underscores: <deep_research>, <fact_check>
+4. Do NOT use ANY other HTML tags or random tags
 5. Do NOT nest tags of different types
-6. Use only these tag types for structured output:
-   - <reason> - for logical reasoning
-   - <analyze> - for detailed analysis
-   - <research> - for research findings
-   - <plan> - for planning/strategy
-   - <compare> - for comparisons
-   - <evaluate> - for evaluations
-   - <critique> - for critical assessment
-   - <summary> - for summaries
-   - <step_by_step> - for procedural explanations
-   - <example> - for examples
-   - <code> - for code blocks or technical content
-   - <deep_research> - for in-depth research
-   - <fact_check> - for verifying facts
-   - <brainstorm> - for creative ideation
+6. ALWAYS provide a final response AFTER trigger tags - never end with just trigger content
+7. Format: Use <trigger> tags for your thinking, then provide final answer/response
 
-**IMPORTANT:** These tags help the user see your thinking process clearly. Use them liberally!
-
-**DO NOT INCLUDE:**
-- Do NOT add a "FINAL TRIGGER SUMMARY" section at the end
+**REQUIREMENTS:**
+- System ONLY recognizes the valid tags listed above
+- Any unregistered tags will be ignored and treated as regular text
+- MUST provide a clear final answer after trigger sections
+- Do NOT add "FINAL TRIGGER SUMMARY" sections
 - Do NOT add "[TRIGGER NAME] WORK COMPLETED" markers
-- Do NOT explain what triggers were activated or how they shaped your response
-- The system automatically detects and displays triggered tags in the UI`;
+- Do NOT explain what triggers were activated
+
+**EXAMPLE:**
+<reason>Your logical thinking...</reason>
+<analyze>Your analysis...</analyze>
+
+Final answer: [Your actual response]`;
 
 export const ENHANCED_SYSTEM_PROMPT_TEMPLATE = (basePrompt: string) => {
   return `${TRIGGER_TAG_ENFORCEMENT_PREFIX}

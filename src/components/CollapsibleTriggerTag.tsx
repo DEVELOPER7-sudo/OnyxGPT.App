@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import { Copy, ChevronDown } from 'lucide-react';
+import { Copy, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -67,6 +67,24 @@ const CollapsibleTriggerTag = ({
 }: CollapsibleTriggerTagProps) => {
   const [isExpanded, setIsExpanded] = useState(autoExpand);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showCreationConfirm, setShowCreationConfirm] = useState(true);
+  
+  // Show confirmation that trigger bar was created
+  useEffect(() => {
+    console.log(`✓ TRIGGER BAR CREATED: <${tagName}> with ${content.length} chars`);
+    // Show a brief toast notification
+    toast.success(`Trigger bar created: <${tagName}>`, {
+      duration: 2000,
+      description: `Content: ${content.substring(0, 30)}${content.length > 30 ? '...' : ''}`,
+    });
+    
+    // Hide confirmation after 3 seconds
+    const timer = setTimeout(() => {
+      setShowCreationConfirm(false);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [tagName]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -114,17 +132,25 @@ const CollapsibleTriggerTag = ({
         <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
           <span className="text-lg md:text-xl flex-shrink-0">{colorScheme.icon}</span>
           
-          <div className="flex flex-col items-start gap-1 min-w-0">
-            <Badge
-              variant="outline"
-              className={cn(
-                'font-mono text-xs font-bold',
-                colorScheme.badge,
-                'truncate max-w-[150px] md:max-w-none'
+          <div className="flex flex-col items-start gap-1 min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className={cn(
+                  'font-mono text-xs font-bold',
+                  colorScheme.badge,
+                  'truncate max-w-[150px] md:max-w-none'
+                )}
+              >
+                &lt;{tagName}/&gt;
+              </Badge>
+              {showCreationConfirm && (
+                <div className="flex items-center gap-1 animate-in fade-in-50 duration-300">
+                  <CheckCircle2 className="w-3 h-3 text-green-500 flex-shrink-0" />
+                  <span className="text-xs text-green-500 font-semibold hidden sm:inline">Created</span>
+                </div>
               )}
-            >
-              &lt;{tagName}/&gt;
-            </Badge>
+            </div>
             {category && (
               <p className="text-xs text-muted-foreground hidden md:block">
                 {category}

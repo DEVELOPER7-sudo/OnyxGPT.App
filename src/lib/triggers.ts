@@ -682,10 +682,10 @@ export const parseTriggeredResponse = (content: string): {
   
   // Also detect IMMEDIATELY OPENED trigger tags (for real-time display)
   // Pattern: <validtag> with content streaming, no closing tag yet
-  // Detect any opening tag that doesn't have a corresponding closing tag
+  // Detect opening tags that don't have a corresponding closing tag YET
   const allOpeningsRegex = /<([a-zA-Z_][a-zA-Z0-9_]*)>/g;
   let openingMatch;
-  const openTagMatches: Array<{ tagName: string; index: number; endIndex: number }> = [];
+  const unclosedTags: Array<{ tagName: string; index: number; endIndex: number }> = [];
   
   while ((openingMatch = allOpeningsRegex.exec(content)) !== null) {
     const tagName = openingMatch[1];
@@ -693,13 +693,12 @@ export const parseTriggeredResponse = (content: string): {
     
     // Only process valid trigger tags
     if (isValidTriggerTag(tagName) && !isInsideCodeBlock(content, openingMatch.index)) {
-      // Check if this tag has a closing counterpart and if it's not already in taggedSegments
-      const hasClosingTag = content.includes(closingTag);
-      const alreadyExists = taggedSegments.some(seg => seg.tag === tagName);
+      // Check if this specific opening tag has a closing tag AFTER it
+      const closingIndex = content.indexOf(closingTag, openingMatch.index);
+      const hasClosingTag = closingIndex !== -1;
       
-      if (!hasClosingTag && !alreadyExists) {
-        // This is an opening tag without a closing tag - capture it immediately
-        openTagMatches.push({
+      if (!hasClosingTag) {
+        unclosedTags.push({
           tagName,
           index: openingMatch.index,
           endIndex: openingMatch.index + openingMatch[0].length,
@@ -708,20 +707,37 @@ export const parseTriggeredResponse = (content: string): {
     }
   }
   
-  // For streaming unclosed tags, extract content between opening tag and end of content
-  // But we need to be smart - only include content if the tag is at the end
-  for (const openTag of openTagMatches) {
-    const contentAfterTag = content.substring(openTag.endIndex);
-    // Check if there's any other content pattern that suggests the tag should end
-    // For now, include all remaining content
-    taggedSegments.push({
-      tag: openTag.tagName,
-      content: contentAfterTag.trim(),
-      startIndex: openTag.index,
-      endIndex: content.length,
-    });
-    // Mark the opening tag for removal
-    replacements.push({ start: openTag.index, end: openTag.endIndex });
+  // Process unclosed tags - but only the most recent one
+  // (When streaming, only the last opened tag that hasn't closed yet should show content)
+  if (unclosedTags.length > 0) {
+    // Get the LAST unclosed tag (most recent)
+    const lastUnclosedTag = unclosedTags[unclosedTags.length - 1];
+    const alreadyInSegments = taggedSegments.some(seg => seg.tag === lastUnclosedTag.tagName);
+    
+    if (!alreadyInSegments) {
+      // Find content from this tag onwards
+      // But exclude any opening tags of other triggers that come after
+      let contentToUse = content.substring(lastUnclosedTag.endIndex);
+      
+      // Check if there are other opening tags after this one
+      const otherOpenTagsAfter = unclosedTags.filter(t => t.index > lastUnclosedTag.index);
+      if (otherOpenTagsAfter.length > 0) {
+        // Cut content at the first other opening tag
+        const firstOtherTag = otherOpenTagsAfter[0];
+        const cutoff = firstOtherTag.index - lastUnclosedTag.endIndex;
+        if (cutoff > 0) {
+          contentToUse = content.substring(lastUnclosedTag.endIndex, firstOtherTag.index);
+        }
+      }
+      
+      taggedSegments.push({
+        tag: lastUnclosedTag.tagName,
+        content: contentToUse.trim(),
+        startIndex: lastUnclosedTag.index,
+        endIndex: lastUnclosedTag.index + lastUnclosedTag.endIndex,
+      });
+      replacements.push({ start: lastUnclosedTag.index, end: lastUnclosedTag.endIndex });
+    }
   }
   
   // Remove ONLY valid trigger tags from clean content using tracked replacements

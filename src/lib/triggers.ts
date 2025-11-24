@@ -715,28 +715,31 @@ export const parseTriggeredResponse = (content: string): {
     const alreadyInSegments = taggedSegments.some(seg => seg.tag === lastUnclosedTag.tagName);
     
     if (!alreadyInSegments) {
-      // Find content from this tag onwards
-      // But exclude any opening tags of other triggers that come after
-      let contentToUse = content.substring(lastUnclosedTag.endIndex);
+      // For unclosed tags during streaming, ONLY capture content after the tag opening
+      // until the end of current content (or until another trigger tag opens)
+      let contentStart = lastUnclosedTag.endIndex;
+      let contentEnd = content.length;
       
       // Check if there are other opening tags after this one
       const otherOpenTagsAfter = unclosedTags.filter(t => t.index > lastUnclosedTag.index);
       if (otherOpenTagsAfter.length > 0) {
         // Cut content at the first other opening tag
         const firstOtherTag = otherOpenTagsAfter[0];
-        const cutoff = firstOtherTag.index - lastUnclosedTag.endIndex;
-        if (cutoff > 0) {
-          contentToUse = content.substring(lastUnclosedTag.endIndex, firstOtherTag.index);
-        }
+        contentEnd = firstOtherTag.index;
       }
+      
+      const contentToUse = content.substring(contentStart, contentEnd);
       
       taggedSegments.push({
         tag: lastUnclosedTag.tagName,
         content: contentToUse.trim(),
         startIndex: lastUnclosedTag.index,
-        endIndex: lastUnclosedTag.index + lastUnclosedTag.endIndex,
+        endIndex: contentEnd,
       });
-      replacements.push({ start: lastUnclosedTag.index, end: lastUnclosedTag.endIndex });
+      
+      // Remove BOTH the opening tag marker AND all its content from clean content
+      // This prevents the content from appearing in the final response
+      replacements.push({ start: lastUnclosedTag.index, end: contentEnd });
     }
   }
   

@@ -14,14 +14,15 @@ reason, analyze, critique, debate, compare, contrast, deduce, evaluate, justify,
 3. Use lowercase tag names with underscores: <deep_research>, <fact_check>
 4. Do NOT use ANY other HTML tags or random tags
 5. Do NOT nest tags of different types
-6. ALWAYS provide a final response AFTER trigger tags - never end with just trigger content
-7. Format: Use <trigger> tags for your thinking, then provide final answer/response
+6. ALWAYS provide a response AFTER trigger tags - never end with just trigger content
+7. Use <trigger> tags for your thinking when needed
 
 **REQUIREMENTS:**
 - System ONLY recognizes the valid tags listed above
 - Any unregistered tags will be ignored and treated as regular text
-- MUST provide a clear final answer after trigger sections
+- Provide your response naturally after any trigger sections
 - Do NOT add "FINAL TRIGGER SUMMARY" sections
+- Do NOT add "Final answer:" prefix
 - Do NOT add "[TRIGGER NAME] WORK COMPLETED" markers
 - Do NOT explain what triggers were activated
 
@@ -29,7 +30,7 @@ reason, analyze, critique, debate, compare, contrast, deduce, evaluate, justify,
 <reason>Your logical thinking...</reason>
 <analyze>Your analysis...</analyze>
 
-Final answer: [Your actual response]`;
+[Your actual response here - no special prefix needed]`;
 
 export const ENHANCED_SYSTEM_PROMPT_TEMPLATE = (basePrompt: string) => {
   return `${TRIGGER_TAG_ENFORCEMENT_PREFIX}

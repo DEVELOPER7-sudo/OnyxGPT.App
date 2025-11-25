@@ -19,6 +19,9 @@ export interface Trigger {
   custom?: boolean;
   tag?: string; // XML tag format
   metadata_support?: boolean;
+  system_prompt_template?: string; // Enhanced system prompt with metadata
+  trigger_response_format?: string; // How AI should structure long responses for this trigger
+  is_registered?: boolean; // True for custom/server-side registered triggers
 }
 
 export interface DetectedTrigger {
@@ -1636,11 +1639,13 @@ export const generateTriggerMetadata = (trigger: Trigger, userPrompt: string): T
 
 export const detectTriggersAndBuildPrompt = (userMessage: string): { 
   systemPrompt: string; 
-  detectedTriggers: DetectedTrigger[] 
+  detectedTriggers: DetectedTrigger[];
+  enhancedSystemPrompt?: string;
 } => {
   const triggers = getAllTriggers().filter(t => t.enabled);
   const detectedTriggers: DetectedTrigger[] = [];
   const instructions: string[] = [];
+  const enhancedInstructions: string[] = [];
 
   const lowerMessage = userMessage.toLowerCase();
 
@@ -1648,14 +1653,23 @@ export const detectTriggersAndBuildPrompt = (userMessage: string): {
     const regex = new RegExp(`\\b${trigger.trigger.toLowerCase()}\\b`, 'i');
     if (regex.test(lowerMessage)) {
       const tagName = generateTagName(trigger.trigger);
+      const metadata = generateTriggerMetadata(trigger, userMessage);
+      
       detectedTriggers.push({
         name: trigger.trigger,
         tag: tagName,
         category: trigger.category,
         instruction: trigger.system_instruction,
-        metadata: generateTriggerMetadata(trigger, userMessage),
+        metadata,
       });
+      
       instructions.push(`${trigger.trigger} means ${trigger.system_instruction}`);
+      
+      // Build enhanced system prompt with trigger response format
+      if (trigger.system_prompt_template || trigger.trigger_response_format) {
+        const template = trigger.system_prompt_template || buildDefaultSystemPromptTemplate(trigger);
+        enhancedInstructions.push(template);
+      }
     }
   });
 
@@ -1666,7 +1680,77 @@ export const detectTriggersAndBuildPrompt = (userMessage: string): {
     systemPrompt = '';
   }
 
-  return { systemPrompt, detectedTriggers };
+  let enhancedSystemPrompt = '';
+  if (enhancedInstructions.length > 0) {
+    enhancedSystemPrompt = enhancedInstructions.join('\n\n---\n\n');
+  }
+
+  return { systemPrompt, detectedTriggers, enhancedSystemPrompt };
+};
+
+/**
+ * Build default system prompt template for triggers without custom templates
+ */
+export const buildDefaultSystemPromptTemplate = (trigger: Trigger): string => {
+  const triggerTag = generateTagName(trigger.trigger);
+  
+  return `## Trigger: ${trigger.trigger} (${trigger.category})
+
+**System Instruction**: ${trigger.system_instruction}
+
+**Response Format**: 
+- Begin your response by clearly indicating which trigger is active: "Activating [${trigger.trigger}] trigger"
+- Provide comprehensive, in-depth analysis using the <${triggerTag}></> tags to structure your thinking
+- After the tagged section, provide a complete, polished response that incorporates the trigger's guidance
+- Ensure the final response is long-form and thorough for better user experience
+
+**Context Metadata**:
+- Category: ${trigger.category}
+- Trigger Type: ${trigger.custom ? 'Custom' : 'Built-in'}
+- Use for: ${trigger.example}
+
+---`;
+};
+
+/**
+ * Build enhanced system prompt for AI with memory context
+ */
+export const buildEnhancedSystemPromptWithMemory = (
+  detectedTriggers: DetectedTrigger[],
+  memoryContext?: string,
+  selectedMemoryForContext?: Array<{ key: string; value: string }>,
+): string => {
+  const sections: string[] = [];
+
+  sections.push('## Active Triggers & Response Format\n');
+  
+  detectedTriggers.forEach((trigger, idx) => {
+    sections.push(`### Trigger ${idx + 1}: ${trigger.name}`);
+    sections.push(`Category: ${trigger.category}`);
+    sections.push(`Instruction: ${trigger.instruction}`);
+    sections.push('');
+  });
+
+  if (memoryContext) {
+    sections.push('## AI Memory Context (Internal Only)\n');
+    sections.push(`Trigger Usage: ${memoryContext}\n`);
+  }
+
+  if (selectedMemoryForContext && selectedMemoryForContext.length > 0) {
+    sections.push('## Selected Memory Context\n');
+    selectedMemoryForContext.forEach(mem => {
+      sections.push(`- **${mem.key}**: ${mem.value}`);
+    });
+    sections.push('');
+  }
+
+  sections.push('## Response Guidelines\n');
+  sections.push('- Provide thorough, comprehensive responses to each trigger');
+  sections.push('- Use structured thinking with appropriate XML tags');
+  sections.push('- Ensure responses are informative and detailed');
+  sections.push('- Maintain context from any related memories when relevant');
+
+  return sections.join('\n');
 };
 
 const isInsideCodeBlock = (content: string, position: number): boolean => {

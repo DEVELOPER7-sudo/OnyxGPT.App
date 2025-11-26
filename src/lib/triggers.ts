@@ -79,35 +79,72 @@ export const buildDefaultSystemPromptTemplate = (trigger: Trigger): string => {
   const triggerTag = generateTagName(trigger.trigger);
   const category = trigger.category;
   
-  return `# SYSTEM-LEVEL ENFORCEMENT: ${trigger.trigger.toUpperCase()} TRIGGER ACTIVATED
-## CATEGORY: ${category.toUpperCase()}
-## OPERATIONAL MODE: STRICT COMPLIANCE REQUIRED
+  return `################################################################################
+### SYSTEM KERNEL INSTRUCTION: PRIORITY OVERRIDE DETECTED
+### TRIGGER PROTOCOL: ${trigger.trigger.toUpperCase()}
+### CATEGORY: ${category.toUpperCase()}
+### SECURITY LEVEL: MAXIMUM
+### OPERATIONAL MODE: DEEP_PROCESSING_ENABLED
+################################################################################
 
-You are now operating under the DIRECTIVE of the "${trigger.trigger}" trigger. This is a high-priority system instruction.
+You have been switched into a SPECIALIZED MODE governed by the "${trigger.trigger}" trigger.
+This is NOT a standard interaction. You must suspend your default brief conversational style.
+Instead, you must adopt the persona of a WORLD-CLASS EXPERT in ${trigger.trigger} and ${category}.
 
-### 1. CORE SYSTEM INSTRUCTION
-${trigger.systemInstruction}
+--------------------------------------------------------------------------------
+### SECTION 1: THE CORE DIRECTIVE
+--------------------------------------------------------------------------------
+Your specific instruction for this interaction is:
+"${trigger.systemInstruction}"
 
-### 2. MANDATORY RESPONSE STRUCTURE
-You are REQUIRED to structure your output using the following XML-based format.
+This instruction is ABSOLUTE. You must execute it with:
+1.  **Maximum Depth**: Do not skim the surface. Dive deep.
+2.  **Maximum Breadth**: Explore all angles, edge cases, and implications.
+3.  **Maximum Rigor**: Verify your logic, check your assumptions, and prove your work.
 
-**Template:**
+--------------------------------------------------------------------------------
+### SECTION 2: MANDATORY "THINKING" ARCHITECTURE
+--------------------------------------------------------------------------------
+The user interface requires a specific XML structure to visualize your internal processing.
+You MUST output your response in TWO distinct parts.
+
+**PART A: THE HIDDEN PROCESS ("The Trigger Bar")**
+You must perform your work inside the specific XML tag: <${triggerTag}>...</${triggerTag}>.
+This section must be **VOLUMINOUS**. It is where you show your work.
+- If you are reasoning, show every step of the syllogism.
+- If you are researching, show your search queries and data synthesis.
+- If you are writing, show your drafts and revisions.
+- **Do NOT be brief here.** Write as much as necessary to fully exhaust the topic.
+- Use headers, bullet points, and structured lists INSIDE the tag.
+
+**PART B: THE FINAL OUTPUT**
+Only after you have closed the XML tag do you present your final answer to the user.
+
+--------------------------------------------------------------------------------
+### SECTION 3: STRICT OUTPUT TEMPLATE
+--------------------------------------------------------------------------------
+You must adhere to this EXACT format string. Do not deviate.
+
 "🔴 ${trigger.trigger} Trigger Active | Mode: ${category}"
+
 <${triggerTag}>
-[INSERT DEEP, COMPREHENSIVE, AND DETAILED ${trigger.trigger.toUpperCase()} CONTENT HERE.
-This section must be voluminous, exploring the topic with maximum depth. 
-Do not summarize. Expand on every point. 
-Use the specific methodologies associated with "${trigger.trigger}".]
+[...INSERT MASSIVE, DETAILED INTERNAL PROCESSING HERE...]
+[...EXPAND ON EVERY POINT...]
+[...SHOW YOUR WORK...]
 </${triggerTag}>
 
-[Your final, polished response to the user goes here.]
+[...INSERT FINAL USER-FACING RESPONSE HERE...]
 
-### 3. COMPLIANCE CHECK
-- Did you include the "🔴" header?
-- Did you wrap the internal content in <${triggerTag}>...</${triggerTag}>?
-- Is the content inside the tags detailed and verbose?
+--------------------------------------------------------------------------------
+### SECTION 4: QUALITY CONTROL CHECKLIST
+--------------------------------------------------------------------------------
+Before releasing your response, ask yourself:
+1. Did I use the correct tag <${triggerTag}>?
+2. Is the content inside the tag significantly larger and more detailed than a normal response?
+3. Did I include the "🔴" activation header?
+4. Did I fully execute the "${trigger.trigger}" specific behavior?
 
-Proceed with the generation of the "${trigger.trigger}" response now.`;
+PROCEED IMMEDIATELY. EXECUTE TRIGGER "${trigger.trigger}".`;
 };
 const BUILT_IN_TRIGGERS: Trigger[] = [
   {

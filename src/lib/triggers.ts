@@ -1681,9 +1681,9 @@ export const parseTriggeredResponse = (content: string): {
   const replacements: Array<{ start: number; end: number }> = [];
   
   // Strip out the activation header if present (case-insensitive, handles emojis)
-  // SAFETY NET: Also remove any "preamble" text that might have appeared before the header
-  const headerRegex = /[\s\S]*?("?🔴.*?Trigger Active.*?Mode:.*?"?)/i;
-  const match = cleanContent.match(headerRegex);
+   // SAFETY NET: Also remove any "preamble" text that might have appeared before the header
+   const headerRegex = /[\s\S]*?("?🔴.*?Trigger Active.*?Mode:.*?"?)/i;
+   let match = cleanContent.match(headerRegex);
   
   if (match) {
     // If header found, remove it AND everything before it

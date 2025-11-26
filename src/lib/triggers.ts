@@ -1692,8 +1692,13 @@ export const parseTriggeredResponse = (content: string): {
 
   // 2. Secondary cleanup: Remove common "leaked" labels that might appear before tags if header was missing
   // Examples: "Reasoning and Analysis<reason>", "Reasoning:", "Analysis:"
-  const leakedLabelRegex = /^(Reasoning|Analysis|Thinking|Trigger Process|System|Process|Mode)\s*(and|&)?\s*(Analysis|Reasoning|Thinking)?\s*[:|-]?\s*(?=<)/i;
+  // Match at start of line or anywhere in content
+  const leakedLabelRegex = /^(Reasoning|Analysis|Thinking|Trigger Process|System|Process|Mode)\s*(and|&)?\s*(Analysis|Reasoning|Thinking)?\s*[:|-]?\s*(?=<)/gim;
   cleanContent = cleanContent.replace(leakedLabelRegex, '');
+  
+  // Also remove category labels followed by opening tags anywhere in content
+  const categoryLabelRegex = /(?:^|\n)(Reasoning and Analysis|Research and Information|Planning and Organization|Communication and Style|Coding and Development|Creative and Writing|Data and Analytics|Business and Strategy|Education and Learning)\s*<([a-zA-Z_][a-zA-Z0-9_]*?)>/gi;
+  cleanContent = cleanContent.replace(categoryLabelRegex, '\n<$1>');
 
   const tagRegex = /<([a-zA-Z_][a-zA-Z0-9_]*?)>([\s\S]*?)<\/\1>/g;
   
@@ -1776,26 +1781,34 @@ export const parseTriggeredResponse = (content: string): {
     .replace(/\n\n\n+/g, '\n\n')
     .trim();
   
-  // FAILSAFE: If cleanContent is empty but we have tagged segments, it likely means the AI put the final response 
-  // INSIDE the last tag or forgot to write it outside. We should try to recover it.
-  if (cleanContent.length === 0 && taggedSegments.length > 0) {
-    const lastSegment = taggedSegments[taggedSegments.length - 1];
-    // Simple heuristic: If the last segment is long, maybe take the last paragraph?
-    // Or just leave it empty? 
-    // If the user complains about "missing final response", it's better to show *something* than nothing.
-    // Let's duplicate the last 300 characters of the reasoning as a "preview" or just leave it.
-    // Actually, let's trust the UI to show the bars. If the bars are visible, the content is there.
-    // But if the user says "Ans doesn't give final response", they expect text *below* the bar.
+  // FAILSAFE: If cleanContent is empty or very short, extract a meaningful summary from trigger content
+  if (cleanContent.trim().length < 50 && taggedSegments.length > 0) {
+    // Try to find a conclusion section or summary
+    for (const segment of taggedSegments) {
+      const segmentContent = segment.content;
+      
+      // Look for conclusion patterns
+      const conclusionMatch = segmentContent.match(/(###\s*Conclusion|###\s*Summary|###\s*Final Answer|In summary|In conclusion|To conclude|Therefore,|Summary:)([\s\S]*?)(?=###|$)/i);
+      if (conclusionMatch && conclusionMatch[2].trim().length > 30) {
+        cleanContent = `**${segment.tag.charAt(0).toUpperCase() + segment.tag.slice(1)} Summary:**\n\n${conclusionMatch[0].trim()}`;
+        break;
+      }
+      
+      // If no conclusion, extract last non-empty paragraph
+      if (cleanContent.length === 0) {
+        const paragraphs = segmentContent.trim().split(/\n\n+/).filter(p => p.trim().length > 0);
+        if (paragraphs.length > 0) {
+          const lastParagraph = paragraphs[paragraphs.length - 1];
+          if (lastParagraph.length > 50) {
+            cleanContent = `**${segment.tag.charAt(0).toUpperCase() + segment.tag.slice(1)} Analysis:**\n\n${lastParagraph}`;
+            break;
+          }
+        }
+      }
+    }
     
-    // Let's try to detect if the last segment ends with a conclusion-like header.
-    const content = lastSegment.content;
-    const conclusionMatch = content.match(/(###\s*Conclusion|###\s*Summary|In summary|To conclude|Therefore,)([\s\S]*)$/i);
-    
-    if (conclusionMatch && conclusionMatch[2].length > 20) {
-      // Promote the detected conclusion to the main response
-      cleanContent = `**Summary from Reasoning:**\n${conclusionMatch[0].trim()}`;
-    } else {
-      // Fallback: Just hint that the answer is in the bar
+    // Final fallback
+    if (cleanContent.trim().length === 0) {
       cleanContent = "_The detailed analysis is available in the trigger bar above._";
     }
   }

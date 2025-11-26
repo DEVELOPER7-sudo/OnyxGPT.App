@@ -26,8 +26,8 @@ Added a new settings toggle to allow users to choose between `openrouter` and `t
 
 ### 4. Settings UI (`src/components/SettingsPanel.tsx`)
 - Added visual prefix selection interface with two clickable cards:
-  - **OpenRouter** (blue): Uses `openrouter:` prefix
-  - **Together AI** (green): Uses `togetherai:` prefix
+  - **OpenRouter** (blue): Uses `openrouter:` prefix (requires API key)
+  - **Together AI** (green): Uses `togetherai:` prefix (direct endpoint, no key needed)
 - Updated `handleAddCustomModel()` to use the selected prefix from settings
 - Integrated with local settings state for real-time selection
 

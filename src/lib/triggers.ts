@@ -1690,6 +1690,11 @@ export const parseTriggeredResponse = (content: string): {
     cleanContent = cleanContent.replace(headerRegex, '');
   }
 
+  // 2. Secondary cleanup: Remove common "leaked" labels that might appear before tags if header was missing
+  // Examples: "Reasoning and Analysis<reason>", "Reasoning:", "Analysis:"
+  const leakedLabelRegex = /^(Reasoning|Analysis|Thinking|Trigger Process|System|Process|Mode)\s*(and|&)?\s*(Analysis|Reasoning|Thinking)?\s*[:|-]?\s*(?=<)/i;
+  cleanContent = cleanContent.replace(leakedLabelRegex, '');
+
   const tagRegex = /<([a-zA-Z_][a-zA-Z0-9_]*?)>([\s\S]*?)<\/\1>/g;
   let match;
   
@@ -1772,6 +1777,30 @@ export const parseTriggeredResponse = (content: string): {
     .replace(/\n\n\n+/g, '\n\n')
     .trim();
   
+  // FAILSAFE: If cleanContent is empty but we have tagged segments, it likely means the AI put the final response 
+  // INSIDE the last tag or forgot to write it outside. We should try to recover it.
+  if (cleanContent.length === 0 && taggedSegments.length > 0) {
+    const lastSegment = taggedSegments[taggedSegments.length - 1];
+    // Simple heuristic: If the last segment is long, maybe take the last paragraph?
+    // Or just leave it empty? 
+    // If the user complains about "missing final response", it's better to show *something* than nothing.
+    // Let's duplicate the last 300 characters of the reasoning as a "preview" or just leave it.
+    // Actually, let's trust the UI to show the bars. If the bars are visible, the content is there.
+    // But if the user says "Ans doesn't give final response", they expect text *below* the bar.
+    
+    // Let's try to detect if the last segment ends with a conclusion-like header.
+    const content = lastSegment.content;
+    const conclusionMatch = content.match(/(###\s*Conclusion|###\s*Summary|In summary|To conclude|Therefore,)([\s\S]*)$/i);
+    
+    if (conclusionMatch && conclusionMatch[2].length > 20) {
+      // Promote the detected conclusion to the main response
+      cleanContent = `**Summary from Reasoning:**\n${conclusionMatch[0].trim()}`;
+    } else {
+      // Fallback: Just hint that the answer is in the bar
+      cleanContent = "_The detailed analysis is available in the trigger bar above._";
+    }
+  }
+
   return { cleanContent, taggedSegments };
 };
 

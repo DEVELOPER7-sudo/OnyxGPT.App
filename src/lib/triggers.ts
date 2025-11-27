@@ -2072,7 +2072,7 @@ export const extractNestedTriggerReferences = (content: string): string[] => {
 export const parseInnerTriggerBars = (content: string): Array<{ tag: string; content: string; startIndex: number; endIndex: number }> => {
   if (!content) return [];
 
-  const innerTriggerPattern = /<\-\-([a-zA-Z_][a-zA-Z0-9_]*)\-\->([^]*?)<\/\-\-\1\-\->/g;
+  const innerTriggerPattern = /<\-\-([a-zA-Z_][a-zA-Z0-9_]*)\-\->([\s\S]*?)<\/\-\-\1\-\->/g;
   const innerTriggers: Array<{ tag: string; content: string; startIndex: number; endIndex: number }> = [];
   let match;
 

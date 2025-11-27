@@ -108,14 +108,18 @@ Your clear, direct final answer to the user's question. This must be at least 10
 --------------------------------------------------------------------------------
 ### SECTION 3.5: NESTED TRIGGER REFERENCES (CRITICAL RULES)
 --------------------------------------------------------------------------------
-**NESTED TRIGGERS ARE SECTION HEADERS INSIDE TRIGGER BARS ONLY**
+**NESTED TRIGGERS ARE SECTION HEADERS USING DIFFERENT TRIGGER NAMES**
 
-Use (--triggername--) to create section headers/subheaders ONLY inside your <${triggerTag}> tag:
-- **RULE 1: LOCATION RESTRICTED** - (--triggername--) can ONLY appear inside <${triggerTag}>...</${triggerTag}>
-- **RULE 2: NEVER IN FINAL RESPONSE** - (--triggername--) must NEVER appear outside trigger tags or in final answer
-- **RULE 3: NO INDEPENDENT TRIGGER BARS** - (--triggername--) should NEVER create separate trigger bars
-- **RULE 4: ANY TRIGGER WORKS** - Use ANY valid trigger name from the full list
+Use (--DIFFERENT_TRIGGERNAME--) to create section headers/subheaders ONLY inside your <${triggerTag}> tag:
+- **RULE 1: USE DIFFERENT TRIGGERS** - MUST use DIFFERENT trigger names than parent. If using <analyze>, use (--reason--), (--deepresearch--), (--evaluate--), etc.
+- **RULE 2: LOCATION RESTRICTED** - (--triggername--) can ONLY appear inside <parenttag>...</parenttag>
+- **RULE 3: NEVER IN FINAL RESPONSE** - (--triggername--) must NEVER appear outside trigger tags or in final answer
+- **RULE 4: NO INDEPENDENT TRIGGER BARS** - (--triggername--) should NEVER create separate trigger bars
 - **RULE 5: MARKDOWN FORMAT** - Use as section headers: ## (--triggername--) or inline: (--triggername--)
+- **RULE 6: VARIETY** - Use different trigger names for different sections to show different perspectives/approaches
+
+**VALID NESTED TRIGGER NAMES TO CHOOSE FROM:**
+reason, analyze, critique, debate, compare, contrast, deduce, evaluate, justify, hypothesize, examine, interpret, verify, reflect, infer, explore, discuss, validate, assess, troubleshoot, search, deepresearch, factcheck, contextualize, summarize, outline, extract, highlight, define, explain, describe, cite, reference, clarify, expand, compress, plan, roadmap, checklist, organize, prioritize, schedule, brainstorm, propose, structure, map, draft, improve, review, simplify, formalize, rephrase, rewrite, summarizeforkids, persuasive, informative, neutral, balanced, empathetic
 
 **EXAMPLE CORRECT:**
 <analyze>
@@ -123,7 +127,10 @@ Use (--triggername--) to create section headers/subheaders ONLY inside your <${t
 First, I reasoned that...
 
 ## (--deepresearch--)
-Then I researched by...
+Then I researched by examining...
+
+## (--evaluate--)
+My evaluation of these perspectives...
 
 ## (--conclusion--)
 My final assessment...
@@ -132,17 +139,21 @@ My final assessment...
 Your final answer here (no nested triggers).
 
 **EXAMPLE WRONG:**
+<analyze>
+## (--analyze--)     ← WRONG: Same as parent trigger
+Content here
+</analyze>
+
 (--reason--) First my reasoning...     ← WRONG: Outside trigger tags
 <analyze>
-(--reason--) My reasoning
+(--reason--) My reasoning     ← CORRECT location but should use other triggers too
 </analyze>
-(--deepresearch--) My research        ← WRONG: Outside trigger tags and creates independent bar
 
 **KEY POINTS:**
-- Nested triggers create visual structure ONLY within trigger bars
-- They format content with markdown headers
-- System will ignore (--triggername--) if it appears outside XML trigger tags
-- Never include them in the final answer section
+- Always use DIFFERENT trigger names inside parent trigger tags
+- Create section structure using multiple different nested triggers
+- Never repeat the parent trigger name as a nested trigger
+- Nested triggers are just headers - they format content, not create new work sections
 
 --------------------------------------------------------------------------------
 ### SECTION 4: CATEGORY-SPECIFIC PROTOCOLS (${category.toUpperCase()})

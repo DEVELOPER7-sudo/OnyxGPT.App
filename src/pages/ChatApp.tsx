@@ -643,7 +643,13 @@ const ChatApp = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response from OpenRouter');
+        const statusText = response.statusText || 'Unknown error';
+        const status = response.status;
+        throw new Error(`OpenRouter API Error: ${status} ${statusText}`);
+      }
+
+      if (!response.body) {
+        throw new Error('No response body received from OpenRouter');
       }
 
       let fullResponse = '';
@@ -664,10 +670,19 @@ const ChatApp = () => {
       let buffer = '';
 
       while (true) {
-        const { done, value } = await reader.read();
+        let chunk;
+        try {
+          chunk = await reader.read();
+        } catch (readError) {
+          throw new Error('Error reading response stream: ' + (readError instanceof Error ? readError.message : String(readError)));
+        }
+        
+        const { done, value } = chunk;
         if (done) break;
         if (controller.signal.aborted) break;
 
+        if (!value) continue;
+        
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
@@ -678,6 +693,9 @@ const ChatApp = () => {
             if (data === '[DONE]') continue;
             
             try {
+              // Handle empty lines
+              if (!data) continue;
+              
               const parsed = JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
@@ -686,8 +704,15 @@ const ChatApp = () => {
                 storage.updateChat(chatId, { messages: currentMessages });
                 setChats(prevChats => prevChats.map(c => c.id === chatId ? { ...c, messages: currentMessages } : c));
               }
-            } catch (e) {
-              // Skip invalid JSON
+            } catch (parseError) {
+              // Log parsing errors in development for debugging
+              if (import.meta.env.DEV) {
+                console.warn('[DEBUG] Failed to parse OpenRouter response chunk:', {
+                  data: data.slice(0, 100),
+                  error: parseError instanceof Error ? parseError.message : String(parseError),
+                });
+              }
+              // Continue processing - single bad chunk shouldn't break everything
             }
           }
         }
@@ -713,28 +738,40 @@ const ChatApp = () => {
       console.error('OpenRouter streaming error:', error);
       logger.logError(modelId, apiParams, error);
       playError();
+      setIsLoading(false);
+      setAbortController(null);
       
       // Check for rate limit errors
       const errorMsg = error?.message || String(error);
-      if (errorMsg.toLowerCase().includes('rate limit') || errorMsg.toLowerCase().includes('429')) {
+      const lowerErrorMsg = errorMsg.toLowerCase();
+      
+      if (lowerErrorMsg.includes('rate limit') || lowerErrorMsg.includes('429')) {
         toast.error('⚠️ OpenRouter Rate Limit Reached', {
           description: 'Please wait before trying again. Too many requests to OpenRouter API.',
           duration: 5000,
         });
-      } else if (errorMsg.toLowerCase().includes('quota') || errorMsg.toLowerCase().includes('credit') || errorMsg.toLowerCase().includes('402')) {
+      } else if (lowerErrorMsg.includes('quota') || lowerErrorMsg.includes('credit') || lowerErrorMsg.includes('402')) {
         toast.error('💳 OpenRouter Credit Limit', {
           description: 'OpenRouter credits exhausted. Please add credits to your OpenRouter account.',
           duration: 5000,
         });
+      } else if (lowerErrorMsg.includes('json') || lowerErrorMsg.includes('parse')) {
+        toast.error('⚠️ Response Parse Error', {
+          description: 'Failed to parse OpenRouter response. Try again.',
+          duration: 5000,
+        });
+      } else if (lowerErrorMsg.includes('network') || lowerErrorMsg.includes('timeout')) {
+        toast.error('🌐 Network Error', {
+          description: 'Lost connection to OpenRouter API. Check your internet connection.',
+          duration: 5000,
+        });
       } else {
         toast.error('❌ OpenRouter Error', {
-          description: errorMsg.slice(0, 100),
+          description: errorMsg.slice(0, 100) || 'An error occurred while processing the response.',
           duration: 5000,
         });
       }
       
-      setIsLoading(false);
-      setAbortController(null);
       throw error;
     }
 

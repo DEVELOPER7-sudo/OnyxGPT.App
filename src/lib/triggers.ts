@@ -1900,11 +1900,24 @@ export const deduplicateResponseContent = (
 
   let result = cleanContent;
   
-  // CRITICAL: Remove any nested trigger syntax from final response
-  // Both (--triggername--) markdown headers and <--triggername-->...</--triggername--> inner bars
-  // should ONLY appear inside trigger bars, NEVER in final response
-  result = result.replace(/\(\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\-\)/g, ''); // Remove markdown headers
-  result = result.replace(/<\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\->[^]*?<\/\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\->/g, ''); // Remove inner trigger bars
+  // CRITICAL: Remove ALL trigger syntax from final response
+  // Nothing with angle brackets or trigger-like syntax should be in final answer
+  
+  // Remove markdown headers (--triggername--)
+  result = result.replace(/\(\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\-\)/g, '');
+  
+  // Remove collapsible inner bars <--triggername-->content</--triggername-->
+  result = result.replace(/<\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\->[^]*?<\/\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\->/gs, '');
+  
+  // Remove any remaining closing tags that weren't caught (malformed)
+  result = result.replace(/<\/\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\->/g, '');
+  
+  // Remove any remaining opening tags that weren't caught (malformed)
+  result = result.replace(/<\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\->/g, '');
+  
+  // Remove any stray markdown parentheses versions
+  result = result.replace(/\(\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\-\)/g, '');
+  
   const contentThreshold = 50; // Minimum similarity threshold
 
   // For each tagged segment, check if its content appears in cleanContent
@@ -1956,10 +1969,24 @@ export const deduplicateResponseContent = (
     result = resultLines.join('\n').trim();
   }
 
-  // Final cleanup: normalize whitespace
+  // Final cleanup: normalize whitespace and remove any lingering trigger syntax
   result = result
     .replace(/\n\n\n+/g, '\n\n')
     .replace(/\s+$/gm, '')
+    .trim();
+  
+  // FAILSAFE: Final pass to catch any remaining trigger syntax that slipped through
+  // This is a last resort cleanup for malformed or edge-case tags
+  result = result.replace(/<\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\->[\s\S]*?<\/\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\->/g, ''); // Inner bars
+  result = result.replace(/<\/\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\->/g, ''); // Closing tags
+  result = result.replace(/<\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\->/g, ''); // Opening tags  
+  result = result.replace(/\(\-\-[a-zA-Z_][a-zA-Z0-9_]*\-\-\)/g, ''); // Markdown headers
+  
+  // Clean up extra whitespace left by removals
+  result = result
+    .replace(/\n\s*\n\s*\n/g, '\n\n')
+    .replace(/\s+/g, ' ')
+    .replace(/\n /g, '\n')
     .trim();
 
   return result;

@@ -22,22 +22,24 @@ import WelcomeMessage from '@/components/WelcomeMessage';
 import CollapsibleTriggerTag from '@/components/CollapsibleTriggerTag';
 import { BookmarkButton } from '@/components/BookmarkButton';
 import {
-   Send,
-   Mic,
-   Image as ImageIcon,
-   Copy,
-   ThumbsUp,
-   ThumbsDown,
-   RotateCcw,
-   Loader2,
-   Globe,
-   Search as SearchIcon,
-   Square,
-   X,
-   Paperclip,
-   Edit2,
-   ChevronDown,
- } from 'lucide-react';
+    Send,
+    Mic,
+    Image as ImageIcon,
+    Copy,
+    ThumbsUp,
+    ThumbsDown,
+    RotateCcw,
+    Loader2,
+    Globe,
+    Search as SearchIcon,
+    Square,
+    X,
+    Paperclip,
+    Edit2,
+    ChevronDown,
+    CheckCircle2,
+    Zap,
+  } from 'lucide-react';
 import { Chat, Message } from '@/types/chat';
 import { cn } from '@/lib/utils';
 
@@ -81,6 +83,7 @@ const ChatArea = ({
   const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
    const [messageFeedback, setMessageFeedback] = useState<Record<string, 'up' | 'down' | null>>({});
    const [showScrollBottom, setShowScrollBottom] = useState(false);
+   const [showMemoryUpdated, setShowMemoryUpdated] = useState(true);
    const scrollRef = useRef<HTMLDivElement>(null);
    const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -569,6 +572,34 @@ const ChatArea = ({
            </div>
           )}
           </div>
+
+      {/* Memory System Updated Banner */}
+      {showMemoryUpdated && (
+        <div className="border-t border-green-500/30 bg-gradient-to-r from-green-500/10 via-green-500/5 to-transparent p-3 animate-slide-in-down">
+          <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 animate-pulse-soft" />
+              <div className="flex flex-col gap-0.5">
+                <p className="text-sm font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
+                  <Zap className="w-4 h-4" />
+                  Memory System Enhanced
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-500">
+                  5 advanced modules added: semantic search, compression, version history, auto-extraction & analytics. All memories now included in system prompt.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowMemoryUpdated(false)}
+              className="flex-shrink-0 text-green-700 dark:text-green-400 hover:bg-green-500/10"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Input Area */}
       <div className="border-t border-border p-2 md:p-4 bg-card/50 backdrop-blur-sm flex-shrink-0 z-10 safe-bottom">

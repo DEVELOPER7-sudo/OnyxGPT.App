@@ -1756,7 +1756,15 @@ export const parseTriggeredResponse = (content: string): {
     const [fullMatch, tagName, tagContent] = match;
     if (isValidTriggerTag(tagName) && !isInsideCodeBlock(content, match.index)) {
       // Parse inner trigger bars within this segment
-      const innerTriggers = parseInnerTriggerBars(tagContent);
+      let innerTriggers: Array<{ tag: string; content: string; startIndex: number; endIndex: number }> = [];
+      try {
+        innerTriggers = parseInnerTriggerBars(tagContent);
+      } catch (parseError) {
+        if (import.meta.env.DEV) {
+          console.warn('[DEBUG] Failed to parse inner triggers:', parseError);
+        }
+        innerTriggers = [];
+      }
       
       taggedSegments.push({
         tag: tagName,
@@ -2070,23 +2078,32 @@ export const extractNestedTriggerReferences = (content: string): string[] => {
  * Returns array of inner trigger objects with tag, content, and indices
  */
 export const parseInnerTriggerBars = (content: string): Array<{ tag: string; content: string; startIndex: number; endIndex: number }> => {
-  if (!content) return [];
+  if (!content || typeof content !== 'string') return [];
 
-  const innerTriggerPattern = /<\-\-([a-zA-Z_][a-zA-Z0-9_]*)\-\->([\s\S]*?)<\/\-\-\1\-\->/g;
-  const innerTriggers: Array<{ tag: string; content: string; startIndex: number; endIndex: number }> = [];
-  let match;
+  try {
+    const innerTriggerPattern = /<\-\-([a-zA-Z_][a-zA-Z0-9_]*)\-\->([\s\S]*?)<\/\-\-\1\-\->/g;
+    const innerTriggers: Array<{ tag: string; content: string; startIndex: number; endIndex: number }> = [];
+    let match;
 
-  while ((match = innerTriggerPattern.exec(content)) !== null) {
-    const [fullMatch, tagName, tagContent] = match;
-    innerTriggers.push({
-      tag: tagName,
-      content: tagContent.trim(),
-      startIndex: match.index,
-      endIndex: match.index + fullMatch.length,
-    });
+    while ((match = innerTriggerPattern.exec(content)) !== null) {
+      const [fullMatch, tagName, tagContent] = match;
+      if (tagName && tagContent !== undefined) {
+        innerTriggers.push({
+          tag: tagName,
+          content: tagContent.trim(),
+          startIndex: match.index,
+          endIndex: match.index + fullMatch.length,
+        });
+      }
+    }
+
+    return innerTriggers;
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('[DEBUG] Error parsing inner trigger bars:', error);
+    }
+    return [];
   }
-
-  return innerTriggers;
 };
 
 export const resetToBuiltIn = () => {

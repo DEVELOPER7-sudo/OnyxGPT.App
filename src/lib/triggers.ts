@@ -1880,6 +1880,109 @@ export const parseTriggeredResponse = (content: string): {
   return { cleanContent, taggedSegments };
 };
 
+/**
+ * Deduplicates content between trigger bars and final response
+ * If content appears in both taggedSegments and cleanContent, removes it from cleanContent
+ * Returns cleaned response without duplicate content
+ */
+export const deduplicateResponseContent = (
+  cleanContent: string,
+  taggedSegments: Array<{ tag: string; content: string; startIndex: number; endIndex: number }>
+): string => {
+  if (!taggedSegments || taggedSegments.length === 0) {
+    return cleanContent;
+  }
+
+  let result = cleanContent;
+  const contentThreshold = 50; // Minimum similarity threshold
+
+  // For each tagged segment, check if its content appears in cleanContent
+  for (const segment of taggedSegments) {
+    const segmentContent = segment.content.trim();
+    
+    if (segmentContent.length < contentThreshold) {
+      continue; // Skip very short content that might be coincidental
+    }
+
+    // Check if significant portion of segment content appears in result
+    // Use multiple search strategies to catch duplicates
+    
+    // 1. Direct substring match
+    if (result.includes(segmentContent)) {
+      result = result.replace(segmentContent, '').trim();
+      continue;
+    }
+
+    // 2. Check if first 100 characters of segment match
+    const segmentStart = segmentContent.substring(0, Math.min(100, segmentContent.length));
+    if (result.includes(segmentStart)) {
+      // Find and remove the full matching paragraph
+      const startIdx = result.indexOf(segmentStart);
+      const endIdx = result.indexOf('\n\n', startIdx + segmentStart.length);
+      if (startIdx !== -1) {
+        const before = result.substring(0, startIdx);
+        const after = endIdx !== -1 ? result.substring(endIdx).trim() : '';
+        result = (before + ' ' + after).trim();
+      }
+      continue;
+    }
+
+    // 3. Check if any substantial line appears in both
+    const segmentLines = segmentContent.split('\n').filter(l => l.trim().length > 30);
+    const resultLines = result.split('\n');
+    
+    for (const segLine of segmentLines) {
+      for (let i = 0; i < resultLines.length; i++) {
+        // Calculate similarity
+        const similarity = calculateStringSimilarity(segLine.trim(), resultLines[i].trim());
+        if (similarity > 0.85) {
+          // Found duplicate line, remove it
+          resultLines.splice(i, 1);
+          i--;
+        }
+      }
+    }
+    result = resultLines.join('\n').trim();
+  }
+
+  // Final cleanup: normalize whitespace
+  result = result
+    .replace(/\n\n\n+/g, '\n\n')
+    .replace(/\s+$/gm, '')
+    .trim();
+
+  return result;
+};
+
+/**
+ * Calculate similarity between two strings (0-1 scale)
+ * Uses simple character overlap method
+ */
+function calculateStringSimilarity(str1: string, str2: string): number {
+  if (!str1 || !str2) return 0;
+  
+  const s1 = str1.toLowerCase().replace(/\s+/g, '');
+  const s2 = str2.toLowerCase().replace(/\s+/g, '');
+  
+  if (s1.length === 0 && s2.length === 0) return 1;
+  if (s1.length === 0 || s2.length === 0) return 0;
+  
+  // Simple Levenshtein-like distance
+  const longer = s1.length > s2.length ? s1 : s2;
+  const shorter = s1.length > s2.length ? s2 : s1;
+  
+  if (longer.includes(shorter)) return 1;
+  
+  let matches = 0;
+  for (let i = 0; i < shorter.length; i++) {
+    if (longer.includes(shorter[i])) {
+      matches++;
+    }
+  }
+  
+  return matches / longer.length;
+}
+
 export const resetToBuiltIn = () => {
   saveTriggers(BUILT_IN_TRIGGERS);
 };

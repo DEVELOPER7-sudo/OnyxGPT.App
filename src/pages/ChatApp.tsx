@@ -17,7 +17,7 @@ import MotionBackground from '@/components/MotionBackground';
 import { createPuterAPILogger, createOpenRouterAPILogger } from '@/lib/api-logger';
 import { supabase } from '@/integrations/supabase/client';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
-import { detectTriggersAndBuildPrompt, parseTriggeredResponse, getAllTriggers } from '@/lib/triggers';
+import { detectTriggersAndBuildPrompt, parseTriggeredResponse, getAllTriggers, deduplicateResponseContent } from '@/lib/triggers';
 import { chatMessageSchema } from '@/lib/validation';
 import { generateEnhancedSystemPrompt, TRIGGER_TAG_ENFORCEMENT_PREFIX } from '@/lib/enhanced-system-prompts';
 
@@ -442,29 +442,32 @@ const ChatApp = () => {
           fullResponse += part?.text || '';
           
           // Parse trigger tags and extract clean content
-          let cleanContent = fullResponse;
-          let taggedSegments: any[] = [];
-          
-          try {
-            const parsed = parseTriggeredResponse(fullResponse);
-            cleanContent = parsed.cleanContent;
-            taggedSegments = parsed.taggedSegments || [];
-          } catch (parseError) {
-            // If parsing fails, just use the raw response
-            if (import.meta.env.DEV) {
-              console.warn('[DEBUG] Failed to parse trigger response:', parseError);
-            }
-            cleanContent = fullResponse;
-            taggedSegments = [];
-          }
-          
-          // Always update with the same assistant message, just changing content
-          const currentMessages = [...messages, { 
-            ...assistantMessage, 
-            content: cleanContent,
-            rawContent: fullResponse,
-            taggedSegments: taggedSegments.length > 0 ? taggedSegments : undefined,
-          }];
+           let cleanContent = fullResponse;
+           let taggedSegments: any[] = [];
+           
+           try {
+             const parsed = parseTriggeredResponse(fullResponse);
+             cleanContent = parsed.cleanContent;
+             taggedSegments = parsed.taggedSegments || [];
+             
+             // Deduplicate content between trigger bars and final response
+             cleanContent = deduplicateResponseContent(cleanContent, taggedSegments);
+           } catch (parseError) {
+             // If parsing fails, just use the raw response
+             if (import.meta.env.DEV) {
+               console.warn('[DEBUG] Failed to parse trigger response:', parseError);
+             }
+             cleanContent = fullResponse;
+             taggedSegments = [];
+           }
+           
+           // Always update with the same assistant message, just changing content
+           const currentMessages = [...messages, { 
+             ...assistantMessage, 
+             content: cleanContent,
+             rawContent: fullResponse,
+             taggedSegments: taggedSegments.length > 0 ? taggedSegments : undefined,
+           }];
           
           storage.updateChat(chatId, { messages: currentMessages });
           setChats(prevChats => prevChats.map(c => c.id === chatId ? { ...c, messages: currentMessages } : c));

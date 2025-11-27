@@ -13,10 +13,11 @@ reason, analyze, critique, debate, compare, contrast, deduce, evaluate, justify,
 2. Each tag MUST be properly closed: <tagname>content</tagname>
 3. Use lowercase tag names with NO underscores or spaces: <deepresearch>, <factcheck>
 4. Do NOT use ANY other HTML tags or random tags
-5. Do NOT nest tags of different types
-6. ALWAYS provide a response AFTER trigger tags - never end with just trigger content
-7. Use <trigger> tags for your thinking when needed
-8. **NO PREAMBLE ALLOWED**: The very first character of your response MUST be the "<" of a tag or the "🔴" of a header. Do NOT write "Thinking about...", "Okay", "Final Response:", or ANY introductory text. Zero tolerance.
+5. **FOR NESTED TRIGGERS (triggers inside triggers):** Use markdown syntax (triggername) instead of XML <triggername>. This prevents double-parsing. Example: Inside a <analyze> tag, reference (reason) or (deepresearch) using parentheses, NOT angle brackets.
+6. Do NOT nest XML tags of different types - use markdown parentheses syntax for nested references
+7. ALWAYS provide a response AFTER trigger tags - never end with just trigger content
+8. Use <trigger> tags for your thinking when needed
+9. **NO PREAMBLE ALLOWED**: The very first character of your response MUST be the "<" of a tag or the "🔴" of a header. Do NOT write "Thinking about...", "Okay", "Final Response:", or ANY introductory text. Zero tolerance.
 
 **REQUIREMENTS:**
 - System ONLY recognizes the valid tags listed above

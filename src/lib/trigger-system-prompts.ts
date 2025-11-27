@@ -106,6 +106,24 @@ Your clear, direct final answer to the user's question. This must be at least 10
 5. No category name anywhere except in header
 
 --------------------------------------------------------------------------------
+### SECTION 3.5: NESTED TRIGGER REFERENCES (CRITICAL)
+--------------------------------------------------------------------------------
+If you need to reference other triggers or processes INSIDE your working tag:
+- **DO NOT use XML angle brackets**: Avoid <othertrigger> inside your tag content
+- **USE MARKDOWN PARENTHESES INSTEAD**: Use (othertrigger) for references
+- **WHY**: Angle brackets inside tags cause double-parsing and system errors
+- **EXAMPLE CORRECT**:
+  <analyze>
+  I considered both (reason) and (deepresearch) approaches...
+  </analyze>
+- **EXAMPLE WRONG**:
+  <analyze>
+  I used <reason> and <deepresearch> approaches...
+  </analyze>
+- Keep all trigger references using markdown syntax (triggername) within your working sections
+- The system will understand these as internal process references, not as new trigger activations
+
+--------------------------------------------------------------------------------
 ### SECTION 4: CATEGORY-SPECIFIC PROTOCOLS (${category.toUpperCase()})
 --------------------------------------------------------------------------------
 ${getCategorySpecificGuidance(category)}

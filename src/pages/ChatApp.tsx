@@ -20,6 +20,7 @@ import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { detectTriggersAndBuildPrompt, parseTriggeredResponse, getAllTriggers, deduplicateResponseContent } from '@/lib/triggers';
 import { chatMessageSchema } from '@/lib/validation';
 import { generateEnhancedSystemPrompt, TRIGGER_TAG_ENFORCEMENT_PREFIX } from '@/lib/enhanced-system-prompts';
+import { buildSystemPromptWithMemoryContext } from '@/lib/memory-context-integration';
 
 // Lazy load heavy components
 const SettingsPanel = lazy(() => import('@/components/SettingsPanel'));
@@ -363,18 +364,24 @@ const ChatApp = () => {
     }
     
     if (webSearchEnabled) {
-      finalSystemPrompt += '\n\nNote: You may use web knowledge if your model supports it. Wrap web search findings in <research> tags.';
-    }
-    if (deepSearchEnabled) {
-      finalSystemPrompt += '\n\nNote: Prefer deeper step-by-step reasoning when needed. Use <stepbystep> tags for detailed breakdowns.';
-    }
-    
-    // Log detected triggers in dev mode
-    if (import.meta.env.DEV && settings.enableDebugLogs && detectedTriggers.length > 0) {
-      console.log('[DEBUG] Detected triggers:', detectedTriggers);
-      console.log('[DEBUG] Task Mode:', taskMode);
-      console.log('[DEBUG] System prompt (first 500 chars):', finalSystemPrompt.substring(0, 500));
-    }
+       finalSystemPrompt += '\n\nNote: You may use web knowledge if your model supports it. Wrap web search findings in <research> tags.';
+     }
+     if (deepSearchEnabled) {
+       finalSystemPrompt += '\n\nNote: Prefer deeper step-by-step reasoning when needed. Use <stepbystep> tags for detailed breakdowns.';
+     }
+     
+     // Add user memories context to system prompt
+     const memoryContext = buildSystemPromptWithMemoryContext(detectedTriggers);
+     if (memoryContext.trim()) {
+       finalSystemPrompt += '\n\n' + memoryContext;
+     }
+     
+     // Log detected triggers in dev mode
+     if (import.meta.env.DEV && settings.enableDebugLogs && detectedTriggers.length > 0) {
+       console.log('[DEBUG] Detected triggers:', detectedTriggers);
+       console.log('[DEBUG] Task Mode:', taskMode);
+       console.log('[DEBUG] System prompt (first 500 chars):', finalSystemPrompt.substring(0, 500));
+     }
     
     // Store triggers in user message for later reference
     const lastUserMessage = messages[messages.length - 1];

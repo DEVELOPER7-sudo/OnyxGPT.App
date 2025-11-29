@@ -20,27 +20,19 @@ import { toast } from 'sonner';
 import LoadingDots from '@/components/LoadingDots';
 import WelcomeMessage from '@/components/WelcomeMessage';
 import CollapsibleTriggerTag from '@/components/CollapsibleTriggerTag';
-import { BookmarkButton } from '@/components/BookmarkButton';
-import ShareDialog from '@/components/ShareDialog';
+
 import {
     Send,
     Mic,
     Image as ImageIcon,
     Copy,
-    ThumbsUp,
-    ThumbsDown,
     RotateCcw,
     Loader2,
-    Globe,
-    Search as SearchIcon,
     Square,
     X,
     Paperclip,
-    Edit2,
     ChevronDown,
-    CheckCircle2,
-    Zap,
-    Share2,
+    Edit2,
   } from 'lucide-react';
 import { Chat, Message } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -79,13 +71,10 @@ const ChatArea = ({
   const [input, setInput] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingMessageContent, setEditingMessageContent] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [expandedThinking, setExpandedThinking] = useState<Set<string>>(new Set());
   const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
-   const [messageFeedback, setMessageFeedback] = useState<Record<string, 'up' | 'down' | null>>({});
-   const [showScrollBottom, setShowScrollBottom] = useState(false);
-   const [showMemoryUpdated, setShowMemoryUpdated] = useState(true);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
    const scrollRef = useRef<HTMLDivElement>(null);
    const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -271,16 +260,6 @@ const ChatArea = ({
   const cancelEditingMessage = () => {
     setEditingMessageId(null);
     setEditingMessageContent('');
-  };
-
-  const handleMessageFeedback = (messageId: string, feedbackType: 'up' | 'down') => {
-    const current = messageFeedback[messageId];
-    const newFeedback = current === feedbackType ? null : feedbackType;
-    setMessageFeedback({ ...messageFeedback, [messageId]: newFeedback });
-    
-    if (newFeedback) {
-      toast.success(`Feedback: ${feedbackType === 'up' ? '👍 Helpful' : '👎 Not helpful'}`);
-    }
   };
 
   if (!chat) {
@@ -473,14 +452,6 @@ const ChatArea = ({
                 )}
                 {message.role === 'assistant' && (
                    <div className="flex gap-2 mt-3 pt-3 border-t border-border animate-fade-in flex-wrap">
-                      <BookmarkButton 
-                        messageId={message.id}
-                        className="h-6 w-6 transition-all duration-200 hover:scale-110"
-                      />
-                      <ShareDialog 
-                        chatId={chat?.id || ''}
-                        chatTitle={chat?.title || 'Chat'}
-                      />
                       <Button
                         variant="ghost"
                         size="icon"
@@ -490,41 +461,17 @@ const ChatArea = ({
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
-                     <Button 
-                       variant="ghost" 
-                       size="icon" 
-                       className={cn(
-                         "h-6 w-6 transition-all duration-200 hover:scale-110",
-                         messageFeedback[message.id] === 'up' && "text-green-500"
-                       )}
-                       onClick={() => handleMessageFeedback(message.id, 'up')}
-                       title="Helpful"
-                     >
-                       <ThumbsUp className="w-4 h-4" />
-                     </Button>
-                     <Button 
-                       variant="ghost" 
-                       size="icon" 
-                       className={cn(
-                         "h-6 w-6 transition-all duration-200 hover:scale-110",
-                         messageFeedback[message.id] === 'down' && "text-red-500"
-                       )}
-                       onClick={() => handleMessageFeedback(message.id, 'down')}
-                       title="Not helpful"
-                     >
-                       <ThumbsDown className="w-4 h-4" />
-                     </Button>
-                     <Button
-                       variant="ghost"
-                       size="icon"
-                       className="h-6 w-6 transition-all duration-200 hover:scale-110 hover:rotate-180"
-                       onClick={() => onRegenerateMessage(message.id)}
-                       title="Regenerate message"
-                     >
-                       <RotateCcw className="w-4 h-4" />
-                     </Button>
-                   </div>
-                 )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 transition-all duration-200 hover:scale-110 hover:rotate-180"
+                        onClick={() => onRegenerateMessage(message.id)}
+                        title="Regenerate message"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 {message.role === 'user' && !editingMessageId && (
                   <div className="flex justify-end mt-2">
                     <Button
@@ -538,6 +485,7 @@ const ChatArea = ({
                     </Button>
                   </div>
                 )}
+
               </div>
             </div>
           ))}
@@ -579,33 +527,7 @@ const ChatArea = ({
           )}
           </div>
 
-      {/* Memory System Updated Banner */}
-      {showMemoryUpdated && (
-        <div className="border-t border-green-500/30 bg-gradient-to-r from-green-500/10 via-green-500/5 to-transparent p-3 animate-slide-in-down">
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 animate-pulse-soft" />
-              <div className="flex flex-col gap-0.5">
-                <p className="text-sm font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
-                  <Zap className="w-4 h-4" />
-                  Memory System Enhanced
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-500">
-                  5 advanced modules added: semantic search, compression, version history, auto-extraction & analytics. All memories now included in system prompt.
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMemoryUpdated(false)}
-              className="flex-shrink-0 text-green-700 dark:text-green-400 hover:bg-green-500/10"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+
 
       {/* Input Area */}
       <div className="border-t border-border p-2 md:p-4 bg-card/50 backdrop-blur-sm flex-shrink-0 z-10 safe-bottom">
@@ -686,75 +608,7 @@ const ChatArea = ({
              </Button>
             </div>
             </div>
-
-            {/* Advanced Menu */}
-            <div className="flex items-center justify-end gap-2 flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className={cn(
-                  "gap-2 transition-all duration-300 hover:border-primary/60 hover:bg-primary/5",
-                  showAdvanced && "border-primary/60 bg-primary/5"
-                )}
-              >
-                <SearchIcon className={cn(
-                  "w-4 h-4 transition-transform duration-300",
-                  showAdvanced && "rotate-180"
-                )} />
-                Advanced
-                {showAdvanced ? <X className="w-3 h-3" /> : null}
-              </Button>
             </div>
-
-          {/* Advanced Options Panel */}
-          {showAdvanced && (
-            <div className="border border-primary/40 rounded-lg p-3 bg-card/50 backdrop-blur-sm space-y-3 animate-expand-blur shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all duration-300">
-              {onTaskModeChange && (
-                <div className="flex items-center gap-2 group">
-                  <Label htmlFor="task-mode-adv" className="whitespace-nowrap text-xs min-w-[80px] group-hover:text-primary transition-colors duration-300">Task Mode:</Label>
-                  <Select value={taskMode} onValueChange={(value: any) => onTaskModeChange(value)}>
-                    <SelectTrigger id="task-mode-adv" className="h-8 flex-1 transition-all duration-300 hover:border-primary/60">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="standard">Standard</SelectItem>
-                      <SelectItem value="reasoning">Reasoning</SelectItem>
-                      <SelectItem value="research">Research</SelectItem>
-                      <SelectItem value="creative">Creative</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between group hover:bg-primary/5 px-2 py-1 rounded transition-all duration-300">
-                  <Label htmlFor="web-search-adv" className="flex items-center gap-2 cursor-pointer group-hover:text-primary transition-colors duration-300">
-                    <Globe className="w-4 h-4" />
-                    Web Search
-                  </Label>
-                  <Switch
-                    checked={webSearchEnabled}
-                    onCheckedChange={onToggleWebSearch}
-                    id="web-search-adv"
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between group hover:bg-primary/5 px-2 py-1 rounded transition-all duration-300">
-                  <Label htmlFor="deep-search-adv" className="flex items-center gap-2 cursor-pointer group-hover:text-primary transition-colors duration-300">
-                    <SearchIcon className="w-4 h-4" />
-                    Deep Search
-                  </Label>
-                  <Switch
-                    checked={deepSearchEnabled}
-                    onCheckedChange={onToggleDeepSearch}
-                    id="deep-search-adv"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

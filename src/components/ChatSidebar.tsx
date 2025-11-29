@@ -16,6 +16,9 @@ import {
   Zap,
   Bot,
   BarChart3,
+  FolderOpen,
+  Bookmark,
+  TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Chat } from '@/types/chat';
@@ -26,7 +29,7 @@ interface ChatSidebarProps {
   onNewChat: () => void;
   onSelectChat: (chatId: string) => void;
   onDeleteChat: (chatId: string) => Promise<void>;
-  onNavigate: (section: 'images' | 'memory' | 'search' | 'settings' | 'logs' | 'triggers' | 'bots' | 'analytics') => void;
+  onNavigate: (section: 'images' | 'memory' | 'search' | 'settings' | 'logs' | 'triggers' | 'bots' | 'analytics' | 'collections' | 'bookmarks' | 'analytics-advanced') => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
 }
@@ -192,6 +195,33 @@ const ChatSidebar = ({
         >
           <BarChart3 className="w-5 h-5" />
           {!collapsed && <span className="ml-2">Analytics</span>}
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start hover:bg-sidebar-accent"
+          size={collapsed ? 'icon' : 'default'}
+          onClick={() => onNavigate('collections')}
+        >
+          <FolderOpen className="w-5 h-5" />
+          {!collapsed && <span className="ml-2">Collections</span>}
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start hover:bg-sidebar-accent"
+          size={collapsed ? 'icon' : 'default'}
+          onClick={() => onNavigate('bookmarks')}
+        >
+          <Bookmark className="w-5 h-5" />
+          {!collapsed && <span className="ml-2">Bookmarks</span>}
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start hover:bg-sidebar-accent"
+          size={collapsed ? 'icon' : 'default'}
+          onClick={() => onNavigate('analytics-advanced')}
+        >
+          <TrendingUp className="w-5 h-5" />
+          {!collapsed && <span className="ml-2">Advanced Analytics</span>}
         </Button>
         <Button
           variant="ghost"

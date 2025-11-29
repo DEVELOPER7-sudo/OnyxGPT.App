@@ -21,6 +21,7 @@ import LoadingDots from '@/components/LoadingDots';
 import WelcomeMessage from '@/components/WelcomeMessage';
 import CollapsibleTriggerTag from '@/components/CollapsibleTriggerTag';
 import { BookmarkButton } from '@/components/BookmarkButton';
+import ShareDialog from '@/components/ShareDialog';
 import {
     Send,
     Mic,
@@ -39,6 +40,7 @@ import {
     ChevronDown,
     CheckCircle2,
     Zap,
+    Share2,
   } from 'lucide-react';
 import { Chat, Message } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -470,10 +472,14 @@ const ChatArea = ({
                   </p>
                 )}
                 {message.role === 'assistant' && (
-                   <div className="flex gap-2 mt-3 pt-3 border-t border-border animate-fade-in">
+                   <div className="flex gap-2 mt-3 pt-3 border-t border-border animate-fade-in flex-wrap">
                       <BookmarkButton 
                         messageId={message.id}
                         className="h-6 w-6 transition-all duration-200 hover:scale-110"
+                      />
+                      <ShareDialog 
+                        chatId={chat?.id || ''}
+                        chatTitle={chat?.title || 'Chat'}
                       />
                       <Button
                         variant="ghost"

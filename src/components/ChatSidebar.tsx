@@ -16,11 +16,6 @@ import {
   Zap,
   Bot,
   BarChart3,
-  FolderOpen,
-  Bookmark,
-  TrendingUp,
-  MoreVertical,
-  ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Chat } from '@/types/chat';
@@ -31,7 +26,7 @@ interface ChatSidebarProps {
   onNewChat: () => void;
   onSelectChat: (chatId: string) => void;
   onDeleteChat: (chatId: string) => Promise<void>;
-  onNavigate: (section: 'images' | 'memory' | 'search' | 'settings' | 'logs' | 'triggers' | 'bots' | 'analytics' | 'collections' | 'bookmarks' | 'analytics-advanced') => void;
+  onNavigate: (section: 'images' | 'memory' | 'search' | 'settings' | 'logs' | 'triggers' | 'bots' | 'analytics') => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
 }
@@ -47,7 +42,6 @@ const ChatSidebar = ({
   onToggleCollapse,
 }: ChatSidebarProps) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [showMoreTools, setShowMoreTools] = useState(false);
 
   const filteredChats = chats.filter(chat => {
     const title = typeof chat.title === 'string' ? chat.title : 'Untitled Chat';
@@ -208,93 +202,6 @@ const ChatSidebar = ({
           <Settings className="w-5 h-5" />
           {!collapsed && <span className="ml-2">Settings</span>}
         </Button>
-
-        {/* More Tools Section */}
-        {!collapsed && (
-          <div className="px-2 mt-4 pt-4 border-t border-sidebar-border">
-            <Button
-              variant="ghost"
-              className="w-full justify-between hover:bg-sidebar-accent text-xs"
-              onClick={() => setShowMoreTools(!showMoreTools)}
-            >
-              <div className="flex items-center gap-2">
-                <MoreVertical className="w-4 h-4" />
-                <span>More Tools</span>
-              </div>
-              <ChevronDown
-                className={cn(
-                  'w-4 h-4 transition-transform duration-300',
-                  showMoreTools && 'rotate-180'
-                )}
-              />
-            </Button>
-
-            {showMoreTools && (
-              <div className="mt-2 space-y-1 pl-2 border-l border-sidebar-accent">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start hover:bg-sidebar-accent text-xs"
-                  size="sm"
-                  onClick={() => onNavigate('collections')}
-                >
-                  <FolderOpen className="w-4 h-4" />
-                  <span className="ml-2">Collections</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start hover:bg-sidebar-accent text-xs"
-                  size="sm"
-                  onClick={() => onNavigate('bookmarks')}
-                >
-                  <Bookmark className="w-4 h-4" />
-                  <span className="ml-2">Bookmarks</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start hover:bg-sidebar-accent text-xs"
-                  size="sm"
-                  onClick={() => onNavigate('analytics-advanced')}
-                >
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="ml-2">Advanced Analytics</span>
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Collapsed view - Show icons only */}
-        {collapsed && (
-          <div className="flex flex-col items-center gap-2 mt-4 pt-4 border-t border-sidebar-border">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-sidebar-accent"
-              onClick={() => onNavigate('collections')}
-              title="Collections"
-            >
-              <FolderOpen className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-sidebar-accent"
-              onClick={() => onNavigate('bookmarks')}
-              title="Bookmarks"
-            >
-              <Bookmark className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-sidebar-accent"
-              onClick={() => onNavigate('analytics-advanced')}
-              title="Advanced Analytics"
-            >
-              <TrendingUp className="w-5 h-5" />
-            </Button>
-          </div>
-        )}
         </div>
         </div>
         );

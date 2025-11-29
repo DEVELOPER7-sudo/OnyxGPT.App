@@ -31,9 +31,6 @@ const LogCenter = lazy(() => import('@/components/LogCenter'));
 const TriggerGallery = lazy(() => import('@/components/TriggerGallery'));
 const CustomBotsManager = lazy(() => import('@/components/CustomBotsManager'));
 const AnalyticsPanel = lazy(() => import('@/components/AnalyticsPanel'));
-const CollectionBrowser = lazy(() => import('@/components/CollectionBrowser'));
-const BookmarksPanel = lazy(() => import('@/components/BookmarksPanel'));
-const AdvancedAnalyticsDashboard = lazy(() => import('@/components/AdvancedAnalyticsDashboard'));
 
 const ChatApp = () => {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -42,7 +39,7 @@ const ChatApp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'chat' | 'images' | 'memory' | 'search' | 'settings' | 'logs' | 'triggers' | 'bots' | 'analytics' | 'collections' | 'bookmarks' | 'analytics-advanced'>('chat');
+  const [currentView, setCurrentView] = useState<'chat' | 'images' | 'memory' | 'search' | 'settings' | 'logs' | 'triggers' | 'bots' | 'analytics'>('chat');
   const [webSearchEnabled, setWebSearchEnabled] = useState(settings.enableWebSearch);
   const [deepSearchEnabled, setDeepSearchEnabled] = useState(settings.enableDeepSearch);
   const [taskMode, setTaskMode] = useState<'standard' | 'reasoning' | 'research' | 'creative'>(settings.taskMode || 'standard');
@@ -1163,19 +1160,6 @@ const ChatApp = () => {
               }}
             />
           )}
-          {currentView === 'collections' && (
-            <CollectionBrowser
-              chats={chats}
-              onSelectChat={(id) => {
-                setCurrentChatId(id);
-                storage.setCurrentChatId(id);
-                setCurrentView('chat');
-              }}
-              onNavigateToChat={() => setCurrentView('chat')}
-            />
-          )}
-          {currentView === 'bookmarks' && <BookmarksPanel visible={true} />}
-          {currentView === 'analytics-advanced' && <AdvancedAnalyticsDashboard />}
         </Suspense>
         </div>
       </div>

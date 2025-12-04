@@ -580,6 +580,101 @@ const SettingsPanel = ({
           </div>
         </div>
 
+        {/* Speech Settings */}
+        <div className="border-t border-border pt-6 space-y-4">
+          <div>
+            <Label className="text-base font-semibold">🎙️ Speech & Audio Settings</Label>
+            <p className="text-xs text-muted-foreground mt-1">Configure text-to-speech and voice input options</p>
+          </div>
+
+          {/* Speech Enabled Toggle */}
+          <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg">
+            <div className="space-y-1">
+              <Label htmlFor="speech-enabled" className="text-base font-medium cursor-pointer flex items-center gap-2">
+                🔊 Enable Text-to-Speech
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Listen to AI responses using the speak button below each message
+              </p>
+            </div>
+            <Switch
+              id="speech-enabled"
+              checked={localSettings.speechEnabled || false}
+              onCheckedChange={(checked) =>
+                setLocalSettings({ ...localSettings, speechEnabled: checked })
+              }
+            />
+          </div>
+
+          {/* Speech Voice Selection */}
+          {localSettings.speechEnabled && (
+            <div className="space-y-2">
+              <Label htmlFor="speech-voice">Voice</Label>
+              <Select
+                value={localSettings.speechVoice || 'nova'}
+                onValueChange={(value) =>
+                  setLocalSettings({ ...localSettings, speechVoice: value as any })
+                }
+              >
+                <SelectTrigger id="speech-voice" className="bg-input">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="alloy">
+                    Alloy - Neutral, professional
+                  </SelectItem>
+                  <SelectItem value="echo">
+                    Echo - Deep, resonant
+                  </SelectItem>
+                  <SelectItem value="fable">
+                    Fable - Storyteller vibe
+                  </SelectItem>
+                  <SelectItem value="onyx">
+                    Onyx - Warm, rich
+                  </SelectItem>
+                  <SelectItem value="nova">
+                    Nova - Bright, friendly
+                  </SelectItem>
+                  <SelectItem value="shimmer">
+                    Shimmer - Soft, melodic
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Choose your preferred voice for text-to-speech
+              </p>
+            </div>
+          )}
+
+          {/* Auto-Play Speech Toggle */}
+          {localSettings.speechEnabled && (
+            <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg">
+              <div className="space-y-1">
+                <Label htmlFor="auto-play-speech" className="text-base font-medium cursor-pointer flex items-center gap-2">
+                  ▶️ Auto-Play Response Audio
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Automatically play audio for all AI responses
+                </p>
+              </div>
+              <Switch
+                id="auto-play-speech"
+                checked={localSettings.autoPlaySpeech || false}
+                onCheckedChange={(checked) =>
+                  setLocalSettings({ ...localSettings, autoPlaySpeech: checked })
+                }
+              />
+            </div>
+          )}
+
+          {/* Speech Info */}
+          <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4 space-y-2">
+            <p className="text-sm"><strong>🎤 Voice Input:</strong> Click the mic button next to the send button to record and transcribe your message</p>
+            <p className="text-sm"><strong>🔊 Response Audio:</strong> Click the speaker button under any AI response to listen to it</p>
+            <p className="text-sm text-muted-foreground text-xs">Uses Pollinations AI API for speech generation and transcription</p>
+          </div>
+        </div>
+
 
 
         <div className="flex justify-end pt-4">

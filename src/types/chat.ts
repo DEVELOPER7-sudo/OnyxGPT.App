@@ -68,6 +68,9 @@ export interface AppSettings {
   customModelPrefix?: 'openrouter' | 'togetherai'; // Custom model API prefix
   useCustomSystemPrompt?: boolean; // Toggle custom system prompt
   customSystemPrompt?: string; // Custom system prompt text
+  speechEnabled?: boolean; // Enable text-to-speech for responses
+  speechVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'; // Voice for text-to-speech
+  autoPlaySpeech?: boolean; // Auto-play speech for assistant responses
 }
 
 export interface CustomBot {

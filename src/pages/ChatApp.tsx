@@ -1121,6 +1121,8 @@ const ChatApp = () => {
             currentModel={settings.textModel}
             taskMode={taskMode}
             onTaskModeChange={setTaskMode}
+            speechVoice={settings.speechVoice}
+            autoPlaySpeech={settings.autoPlaySpeech}
           />
         )}
         <Suspense fallback={

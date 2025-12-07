@@ -307,7 +307,8 @@ const ChatApp = () => {
         storage.updateChat(chatId, { messages: currentMessages });
         setChats(prevChats => prevChats.map(c => c.id === chatId ? { ...c, messages: currentMessages } : c));
       } else {
-        // Process stream
+        // Process stream - handle both plain text and JSON SSE formats
+        let buffer = '';
         while (true) {
           if (controller.signal.aborted) {
             break;
@@ -316,12 +317,59 @@ const ChatApp = () => {
           const { done, value } = await reader.read();
           if (done) break;
           
-          const chunk = decoder.decode(value);
-          fullResponse += chunk;
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+          
+          // Try to parse JSON SSE format (Azure/Pollinations with streaming)
+          const lines = buffer.split('\n');
+          for (let i = 0; i < lines.length - 1; i++) {
+            const line = lines[i].trim();
+            if (line.startsWith('data: ')) {
+              const jsonStr = line.slice(6);
+              if (jsonStr === '[DONE]') {
+                continue;
+              }
+              try {
+                const data = JSON.parse(jsonStr);
+                // Extract content from OpenAI/Azure format
+                if (data.choices && Array.isArray(data.choices) && data.choices[0]?.delta?.content) {
+                  fullResponse += data.choices[0].delta.content;
+                }
+              } catch (e) {
+                // If not JSON, treat as plain text
+                fullResponse += line;
+              }
+            } else if (line && !line.startsWith('data:')) {
+              // Plain text chunk
+              fullResponse += line;
+            }
+          }
+          // Keep last incomplete line in buffer
+          buffer = lines[lines.length - 1];
           
           const currentMessages = [...messages, { ...assistantMessage, content: fullResponse }];
           storage.updateChat(chatId, { messages: currentMessages });
           setChats(prevChats => prevChats.map(c => c.id === chatId ? { ...c, messages: currentMessages } : c));
+        }
+        
+        // Process any remaining buffer
+        if (buffer.trim()) {
+          const line = buffer.trim();
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.slice(6);
+            if (jsonStr !== '[DONE]') {
+              try {
+                const data = JSON.parse(jsonStr);
+                if (data.choices && Array.isArray(data.choices) && data.choices[0]?.delta?.content) {
+                  fullResponse += data.choices[0].delta.content;
+                }
+              } catch (e) {
+                fullResponse += jsonStr;
+              }
+            }
+          } else {
+            fullResponse += line;
+          }
         }
         
         setAbortController(null);

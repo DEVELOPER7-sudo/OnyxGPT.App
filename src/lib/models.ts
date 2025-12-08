@@ -2,10 +2,6 @@ import { beautifyModelName, getProviderFromModelId, getCustomModels } from './mo
 import { ALL_OPENROUTER_MODELS } from './all-models';
 
 export const TEXT_MODELS = [
-  // Top pinned models
-  { id: 'evil', name: 'OnyxAI Evil', provider: 'Pollinations', isPollinations: true, streaming: true, nsfw: true, vision: true },
-  { id: 'unity', name: 'RpGPT', provider: 'Pollinations', isPollinations: true, streaming: true, nsfw: true, vision: true },
-  
   // Featured Models (Puter JS endpoint with OpenRouter prefix)
   { id: 'openrouter:openai/gpt-5', name: 'GPT-5', provider: 'OpenAI' },
   { id: 'openrouter:anthropic/claude-sonnet-4.5', name: 'Claude Sonnet 4.5', provider: 'Anthropic' },

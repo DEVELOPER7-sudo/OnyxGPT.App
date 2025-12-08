@@ -131,33 +131,6 @@ const SettingsPanel = ({
       {/* Theme Customization */}
       <ThemeCustomizer settings={localSettings} onUpdateSettings={onUpdateSettings} />
 
-      {/* Pollinations API Key */}
-      <Card className="p-6 space-y-4 border-blue-500/50 bg-blue-500/5">
-        <div>
-          <h2 className="text-xl font-semibold mb-2">🔑 Pollinations API Key</h2>
-          <p className="text-sm text-muted-foreground">
-            Required to use OnyxAI Evil and RpGPT models. Get your free API key at https://auth.pollinations.ai
-          </p>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="pollinations-key">API Key</Label>
-          <Input
-            id="pollinations-key"
-            type="password"
-            placeholder="Enter your Pollinations API key"
-            value={localSettings.pollinationsApiKey || ''}
-            onChange={(e) =>
-              setLocalSettings({ ...localSettings, pollinationsApiKey: e.target.value })
-            }
-            className="bg-input font-mono text-sm"
-          />
-          <p className="text-xs text-muted-foreground">
-            Your API key is stored locally in your browser and never sent to our servers.
-          </p>
-        </div>
-      </Card>
-
       {/* Puter Account */}
       <Card className="p-6 space-y-4">
         <div>
@@ -234,16 +207,6 @@ const SettingsPanel = ({
                      className="h-8 text-sm"
                    />
                  </div>
-                 {filteredModels.filter((model: any) => !model.isCustom && (model.id === 'evil' || model.id === 'unity')).length > 0 && (
-                   <>
-                     <div className="px-2 py-1.5 text-xs font-semibold text-blue-500 flex items-center gap-1">📌 Pinned - Pollinations</div>
-                     {filteredModels.filter((model: any) => !model.isCustom && (model.id === 'evil' || model.id === 'unity')).map((model: any) => (
-                       <SelectItem key={model.id} value={model.id}>
-                         <span className="font-semibold">{model.name}</span> ({model.provider})
-                       </SelectItem>
-                     ))}
-                   </>
-                 )}
                  {filteredModels.filter((model: any) => !model.isCustom && model.id.includes('venice')).length > 0 && (
                    <>
                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">🐬 Uncensored Model (OpenRouter)</div>

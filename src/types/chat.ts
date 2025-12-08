@@ -71,7 +71,6 @@ export interface AppSettings {
   speechEnabled?: boolean; // Enable text-to-speech for responses
   speechVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'; // Voice for text-to-speech
   autoPlaySpeech?: boolean; // Auto-play speech for assistant responses
-  pollinationsApiKey?: string; // API key for Pollinations models
 }
 
 export interface CustomBot {

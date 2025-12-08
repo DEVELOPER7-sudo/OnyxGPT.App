@@ -273,7 +273,7 @@ const ChatApp = () => {
       }
       
       // Call Pollinations API with streaming enabled and provided API key
-      const pollinationsUrl = `https://api.pollinations.ai/v1/chat/completions`;
+      const pollinationsUrl = `https://text.pollinations.ai/openai`;
       const requestBody = {
         model: modelId, // Use 'evil' or 'unity'
         messages: messages.map(m => ({
@@ -292,6 +292,15 @@ const ChatApp = () => {
         throw new Error('Pollinations API key not configured. Please add it in Settings.');
       }
       
+      if (import.meta.env.DEV && settings.enableDebugLogs) {
+        console.log('[Pollinations] Request URL:', pollinationsUrl);
+        console.log('[Pollinations] Request Body:', requestBody);
+        console.log('[Pollinations] Headers:', {
+          'Authorization': `Bearer ${settings.pollinationsApiKey?.substring(0, 10)}...`,
+          'Content-Type': 'application/json',
+        });
+      }
+
       const response = await fetch(pollinationsUrl, {
         method: 'POST',
         headers: {
@@ -303,7 +312,11 @@ const ChatApp = () => {
       });
       
       if (!response.ok) {
-        throw new Error(`Pollinations API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        if (import.meta.env.DEV && settings.enableDebugLogs) {
+          console.error('[Pollinations] Error Response:', errorText);
+        }
+        throw new Error(`Pollinations API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
       
       let fullResponse = '';
@@ -1118,6 +1131,11 @@ const ChatApp = () => {
           max_tokens: settings.maxTokens || 2048,
         };
 
+        if (import.meta.env.DEV && settings.enableDebugLogs) {
+          console.log('[Vision] Pollinations Request URL:', pollinationsUrl);
+          console.log('[Vision] Pollinations Request Body:', requestBody);
+        }
+
         const response = await fetch(pollinationsUrl, {
           method: 'POST',
           headers: {
@@ -1129,7 +1147,11 @@ const ChatApp = () => {
         });
 
         if (!response.ok) {
-          throw new Error(`Pollinations API error: ${response.status} ${response.statusText}`);
+          const errorText = await response.text();
+          if (import.meta.env.DEV && settings.enableDebugLogs) {
+            console.error('[Vision] Pollinations Error Response:', errorText);
+          }
+          throw new Error(`Pollinations API error: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
         let fullResponse = '';

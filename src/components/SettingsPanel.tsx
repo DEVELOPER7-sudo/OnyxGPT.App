@@ -14,7 +14,6 @@ import { beautifyModelName, getCustomModels, addCustomModel, removeCustomModel }
 import { getAllTriggers } from '@/lib/triggers';
 import { toast } from 'sonner';
 import { Download, Upload, LogOut, LogIn, Trash2, Plus, X, BarChart3 } from 'lucide-react';
-import { ThemeCustomizer } from '@/components/ThemeCustomizer';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 
 interface SettingsPanelProps {
@@ -128,8 +127,32 @@ const SettingsPanel = ({
         </TabsList>
 
         <TabsContent value="settings" className="space-y-6">
-      {/* Theme Customization */}
-      <ThemeCustomizer settings={localSettings} onUpdateSettings={onUpdateSettings} />
+      {/* Pollinations API Key */}
+      <Card className="p-6 space-y-4 border-blue-500/50 bg-blue-500/5">
+        <div>
+          <h2 className="text-xl font-semibold mb-2">🔑 Pollinations API Key</h2>
+          <p className="text-sm text-muted-foreground">
+            Required to use OnyxAI Evil and RpGPT models. Get your free API key at https://auth.pollinations.ai
+          </p>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="pollinations-key">API Key</Label>
+          <Input
+            id="pollinations-key"
+            type="password"
+            placeholder="Enter your Pollinations API key"
+            value={localSettings.pollinationsApiKey || ''}
+            onChange={(e) =>
+              setLocalSettings({ ...localSettings, pollinationsApiKey: e.target.value })
+            }
+            className="bg-input font-mono text-sm"
+          />
+          <p className="text-xs text-muted-foreground">
+            Your API key is stored locally in your browser and never sent to our servers.
+          </p>
+        </div>
+      </Card>
 
       {/* Puter Account */}
       <Card className="p-6 space-y-4">
@@ -194,29 +217,39 @@ const SettingsPanel = ({
                 onCloseAutoFocus={(e) => e.preventDefault()}
               >
                 <div className="px-2 pb-2 sticky top-0 bg-popover z-10">
-                  <Input
-                    placeholder="Search models..."
-                    value={modelSearch}
-                    onChange={(e) => setModelSearch(e.target.value)}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    onFocusCapture={(e) => e.stopPropagation()}
-                    inputMode="search"
-                    className="h-8 text-sm"
-                  />
-                </div>
-                {filteredModels.filter((model: any) => !model.isCustom && model.id.includes('venice')).length > 0 && (
-                  <>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">🐬 Uncensored Model (OpenRouter)</div>
-                    {filteredModels.filter((model: any) => !model.isCustom && model.id.includes('venice')).map((model: any) => (
-                      <SelectItem key={model.id} value={model.id}>
-                        {model.name}
-                      </SelectItem>
-                    ))}
-                  </>
-                )}
+                   <Input
+                     placeholder="Search models..."
+                     value={modelSearch}
+                     onChange={(e) => setModelSearch(e.target.value)}
+                     onPointerDown={(e) => e.stopPropagation()}
+                     onKeyDown={(e) => e.stopPropagation()}
+                     onMouseDown={(e) => e.stopPropagation()}
+                     onTouchStart={(e) => e.stopPropagation()}
+                     onFocusCapture={(e) => e.stopPropagation()}
+                     inputMode="search"
+                     className="h-8 text-sm"
+                   />
+                 </div>
+                 {filteredModels.filter((model: any) => !model.isCustom && (model.id === 'evil' || model.id === 'unity')).length > 0 && (
+                   <>
+                     <div className="px-2 py-1.5 text-xs font-semibold text-blue-500 flex items-center gap-1">📌 Pinned - Pollinations</div>
+                     {filteredModels.filter((model: any) => !model.isCustom && (model.id === 'evil' || model.id === 'unity')).map((model: any) => (
+                       <SelectItem key={model.id} value={model.id}>
+                         <span className="font-semibold">{model.name}</span> ({model.provider})
+                       </SelectItem>
+                     ))}
+                   </>
+                 )}
+                 {filteredModels.filter((model: any) => !model.isCustom && model.id.includes('venice')).length > 0 && (
+                   <>
+                     <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">🐬 Uncensored Model (OpenRouter)</div>
+                     {filteredModels.filter((model: any) => !model.isCustom && model.id.includes('venice')).map((model: any) => (
+                       <SelectItem key={model.id} value={model.id}>
+                         {model.name}
+                       </SelectItem>
+                     ))}
+                   </>
+                 )}
                 {filteredModels.filter((model: any) => !model.isCustom && !model.id.includes('venice') && (model.id.includes('gpt-5') || model.id.includes('claude-sonnet-4.5') || model.id.includes('gemini-2.5-pro') || model.id.includes('deepseek-r1') || model.id.includes('grok-3') || model.id.includes('llama-4') || model.id.includes('qwen3-max') || model.id.includes('sonar-pro'))).length > 0 && (
                   <>
                     <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">⚡ Featured Models (Puter JS)</div>
@@ -456,44 +489,6 @@ const SettingsPanel = ({
             <p className="text-xs text-muted-foreground mt-1">Configure advanced AI behavior and privacy settings</p>
           </div>
 
-          {/* Custom System Prompt */}
-          <div className="space-y-3 p-4 bg-secondary/30 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="custom-prompt" className="text-base font-medium cursor-pointer flex items-center gap-2">
-                  🤖 Custom System Prompt
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Override default AI behavior with your own system instructions
-                </p>
-              </div>
-              <Switch
-                id="custom-prompt-toggle"
-                checked={localSettings.useCustomSystemPrompt || false}
-                onCheckedChange={(checked) =>
-                  setLocalSettings({ ...localSettings, useCustomSystemPrompt: checked })
-                }
-              />
-            </div>
-            
-            {localSettings.useCustomSystemPrompt && (
-              <div className="pt-2 space-y-2">
-                <textarea
-                  id="custom-prompt"
-                  placeholder="Enter your custom system prompt here..."
-                  value={localSettings.customSystemPrompt || ''}
-                  onChange={(e) =>
-                    setLocalSettings({ ...localSettings, customSystemPrompt: e.target.value })
-                  }
-                  className="w-full min-h-[120px] bg-background border border-border rounded-md p-3 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <p className="text-xs text-muted-foreground">
-                  This will be prepended to all AI requests. Use this to customize the AI's personality, tone, or specific behaviors.
-                </p>
-              </div>
-            )}
-          </div>
-
           {/* Streaming Toggle */}
           <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg">
             <div className="space-y-1">
@@ -532,103 +527,6 @@ const SettingsPanel = ({
             />
           </div>
         </div>
-
-        {/* Speech Settings */}
-        <div className="border-t border-border pt-6 space-y-4">
-          <div>
-            <Label className="text-base font-semibold">🎙️ Speech & Audio Settings</Label>
-            <p className="text-xs text-muted-foreground mt-1">Configure text-to-speech and voice input options</p>
-          </div>
-
-          {/* Speech Enabled Toggle */}
-          <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg">
-            <div className="space-y-1">
-              <Label htmlFor="speech-enabled" className="text-base font-medium cursor-pointer flex items-center gap-2">
-                🔊 Enable Text-to-Speech
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Listen to AI responses using the speak button below each message
-              </p>
-            </div>
-            <Switch
-              id="speech-enabled"
-              checked={localSettings.speechEnabled || false}
-              onCheckedChange={(checked) =>
-                setLocalSettings({ ...localSettings, speechEnabled: checked })
-              }
-            />
-          </div>
-
-          {/* Speech Voice Selection */}
-          {localSettings.speechEnabled && (
-            <div className="space-y-2">
-              <Label htmlFor="speech-voice">Voice</Label>
-              <Select
-                value={localSettings.speechVoice || 'nova'}
-                onValueChange={(value) =>
-                  setLocalSettings({ ...localSettings, speechVoice: value as any })
-                }
-              >
-                <SelectTrigger id="speech-voice" className="bg-input">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="alloy">
-                    Alloy - Neutral, professional
-                  </SelectItem>
-                  <SelectItem value="echo">
-                    Echo - Deep, resonant
-                  </SelectItem>
-                  <SelectItem value="fable">
-                    Fable - Storyteller vibe
-                  </SelectItem>
-                  <SelectItem value="onyx">
-                    Onyx - Warm, rich
-                  </SelectItem>
-                  <SelectItem value="nova">
-                    Nova - Bright, friendly
-                  </SelectItem>
-                  <SelectItem value="shimmer">
-                    Shimmer - Soft, melodic
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Choose your preferred voice for text-to-speech
-              </p>
-            </div>
-          )}
-
-          {/* Auto-Play Speech Toggle */}
-          {localSettings.speechEnabled && (
-            <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg">
-              <div className="space-y-1">
-                <Label htmlFor="auto-play-speech" className="text-base font-medium cursor-pointer flex items-center gap-2">
-                  ▶️ Auto-Play Response Audio
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Automatically play audio for all AI responses
-                </p>
-              </div>
-              <Switch
-                id="auto-play-speech"
-                checked={localSettings.autoPlaySpeech || false}
-                onCheckedChange={(checked) =>
-                  setLocalSettings({ ...localSettings, autoPlaySpeech: checked })
-                }
-              />
-            </div>
-          )}
-
-          {/* Speech Info */}
-          <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4 space-y-2">
-            <p className="text-sm"><strong>🎤 Voice Input:</strong> Click the mic button next to the send button to record and transcribe your message</p>
-            <p className="text-sm"><strong>🔊 Response Audio:</strong> Click the speaker button under any AI response to listen to it</p>
-            <p className="text-sm text-muted-foreground text-xs">Uses Pollinations AI API for speech generation and transcription</p>
-          </div>
-        </div>
-
-
 
         <div className="flex justify-end pt-4">
           <Button onClick={handleSave} size="lg" className="glow-blue">

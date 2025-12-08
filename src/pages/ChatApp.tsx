@@ -1082,7 +1082,7 @@ const ChatApp = () => {
           throw new Error('Pollinations API key not configured. Please add it in Settings.');
         }
 
-        const pollinationsUrl = `https://api.pollinations.ai/v1/chat/completions`;
+        const pollinationsUrl = `https://text.pollinations.ai/openai`;
         const imageArray = Array.isArray(imageUrl) ? imageUrl : [imageUrl];
         const contentArray: any[] = [
           {
@@ -1091,7 +1091,7 @@ const ChatApp = () => {
           },
         ];
 
-        // Add images as content
+        // Add images as URL references
         for (const img of imageArray) {
           contentArray.push({
             type: 'image_url',

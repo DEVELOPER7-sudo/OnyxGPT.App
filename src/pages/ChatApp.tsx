@@ -1,5 +1,4 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
 import ChatSidebar from '@/components/ChatSidebar';
 import ChatArea from '@/components/ChatArea';
 import Header from '@/components/Header';
@@ -33,7 +32,6 @@ const TriggerGallery = lazy(() => import('@/components/TriggerGallery'));
 const AnalyticsPanel = lazy(() => import('@/components/AnalyticsPanel'));
 
 const ChatApp = () => {
-   const navigate = useNavigate();
    const [chats, setChats] = useState<Chat[]>([]);
    const [currentChatId, setCurrentChatId] = useState<string | null>(null);
    const [settings, setSettings] = useState<AppSettings>(storage.getSettings());
@@ -985,13 +983,9 @@ const ChatApp = () => {
     toast.success(`Image generated with ${settings.imageModel}`);
   };
 
-  const handleNavigate = (section: 'images' | 'mindstore' | 'search' | 'settings' | 'logs' | 'analytics' | 'fluxes' | 'voice') => {
-    if (section === 'voice') {
-      navigate('/voice');
-    } else {
-      setCurrentView(section as any);
-      setMobileMenuOpen(false);
-    }
+  const handleNavigate = (section: 'images' | 'mindstore' | 'search' | 'settings' | 'logs' | 'analytics' | 'fluxes') => {
+    setCurrentView(section as any);
+    setMobileMenuOpen(false);
   };
 
   const handleUpdateTitle = (chatId: string, title: string) => {

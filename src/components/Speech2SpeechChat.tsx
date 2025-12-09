@@ -60,6 +60,7 @@ const Speech2SpeechChat = ({ onClose }: Speech2SpeechChatProps) => {
 
   const [conversation, setConversation] = useState<ConversationItem[]>([]);
   const [selectedVoice, setSelectedVoice] = useState('21m00Tcm4TlvDq8ikWAM');
+  const [customVoiceId, setCustomVoiceId] = useState('');
   const [removeNoise, setRemoveNoise] = useState(false);
   const [model, setModel] = useState<'eleven_multilingual_sts_v2' | 'eleven_english_sts_v2'>('eleven_multilingual_sts_v2');
   const [showSettings, setShowSettings] = useState(false);
@@ -103,26 +104,27 @@ const Speech2SpeechChat = ({ onClose }: Speech2SpeechChatProps) => {
         setConversation(prev => [...prev, userMessage]);
 
         // Convert voice
-        try {
-          const convertedUrl = await convertVoice(audioBlob, {
-            voice: selectedVoice,
-            model: model,
-            removeBackgroundNoise: removeNoise,
-          });
+         try {
+           const voiceToUse = customVoiceId || selectedVoice;
+           const convertedUrl = await convertVoice(audioBlob, {
+             voice: voiceToUse,
+             model: model,
+             removeBackgroundNoise: removeNoise,
+           });
 
-          // Add assistant message with converted voice
-          const assistantMessage: ConversationItem = {
-            id: `msg-${Date.now()}-reply`,
-            type: 'assistant',
-            transcript: `[Voice conversion applied - listening to your message in different voice]`,
-            audioUrl: convertedUrl,
-            timestamp: new Date(),
-            voiceId: selectedVoice,
-          };
-          setConversation(prev => [...prev, assistantMessage]);
-        } catch (err) {
-          console.error('Conversion failed:', err);
-        }
+           // Add assistant message with converted voice
+           const assistantMessage: ConversationItem = {
+             id: `msg-${Date.now()}-reply`,
+             type: 'assistant',
+             transcript: `[Voice conversion applied - listening to your message in different voice]`,
+             audioUrl: convertedUrl,
+             timestamp: new Date(),
+             voiceId: voiceToUse,
+           };
+           setConversation(prev => [...prev, assistantMessage]);
+         } catch (err) {
+           console.error('Conversion failed:', err);
+         }
 
         // Clear for next recording
         setTranscript('');
@@ -215,20 +217,45 @@ const Speech2SpeechChat = ({ onClose }: Speech2SpeechChatProps) => {
         <Card className="mx-4 mt-4 p-4 border-primary/30 bg-primary/5">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="voice-select">Target Voice</Label>
-              <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-                <SelectTrigger id="voice-select" className="bg-background/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {VOICE_OPTIONS.map(voice => (
-                    <SelectItem key={voice.id} value={voice.id}>
-                      {voice.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+               <Label htmlFor="voice-select">Target Voice</Label>
+               <Select value={customVoiceId || selectedVoice} onValueChange={(val) => {
+                 if (val === 'custom') {
+                   setSelectedVoice('');
+                 } else {
+                   setSelectedVoice(val);
+                   setCustomVoiceId('');
+                 }
+               }}>
+                 <SelectTrigger id="voice-select" className="bg-background/50">
+                   <SelectValue />
+                 </SelectTrigger>
+                 <SelectContent>
+                   {VOICE_OPTIONS.map(voice => (
+                     <SelectItem key={voice.id} value={voice.id}>
+                       {voice.label}
+                     </SelectItem>
+                   ))}
+                   <SelectItem value="custom">Custom Voice ID</SelectItem>
+                 </SelectContent>
+               </Select>
+             </div>
+
+             {(customVoiceId || !selectedVoice) && (
+               <div className="space-y-2">
+                 <Label htmlFor="custom-voice">Custom Voice ID</Label>
+                 <input
+                   id="custom-voice"
+                   type="text"
+                   placeholder="Enter ElevenLabs voice ID (e.g., 21m00Tcm4TlvDq8ikWAM)"
+                   value={customVoiceId}
+                   onChange={(e) => setCustomVoiceId(e.target.value)}
+                   className="w-full px-3 py-2 bg-background/50 border border-border rounded-md text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                 />
+                 <p className="text-xs text-muted-foreground">
+                   Get voice IDs from <a href="https://elevenlabs.io/app/voices" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">ElevenLabs Voices</a>
+                 </p>
+               </div>
+             )}
 
             <div className="space-y-2">
               <Label htmlFor="model-select">Voice Model</Label>
@@ -400,7 +427,10 @@ const Speech2SpeechChat = ({ onClose }: Speech2SpeechChatProps) => {
           {/* Info */}
           <p className="text-xs text-muted-foreground text-center">
             Selected Voice: <span className="font-semibold">
-              {VOICE_OPTIONS.find(v => v.id === selectedVoice)?.label}
+              {customVoiceId 
+                ? `Custom (${customVoiceId})`
+                : VOICE_OPTIONS.find(v => v.id === selectedVoice)?.label
+              }
             </span>
           </p>
         </div>

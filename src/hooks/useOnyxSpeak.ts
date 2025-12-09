@@ -133,47 +133,19 @@ export const useOnyxSpeak = () => {
           throw new Error('AI module not available in OnyxGPT.Speak');
         }
 
-        // Use the correct Puter.ai API endpoint
-        // puter.ai.speech2speech() should work with the SDK
         let convertedAudio: any;
         
-        try {
-          // Try the primary method
-          if (typeof puter.ai.speech2speech === 'function') {
-            convertedAudio = await puter.ai.speech2speech(audioBlob, {
-              voice: options.voice || '21m00Tcm4TlvDq8ikWAM', // Rachel voice by default
-              model: options.model || 'eleven_multilingual_sts_v2',
-              output_format: options.output_format || 'mp3_44100_128',
-              removeBackgroundNoise: options.removeBackgroundNoise ?? false,
-              voiceSettings: options.voiceSettings,
-              testMode: options.testMode ?? false,
-            });
-          } else {
-            // Fallback: convert blob to data URL and try
-            const reader = new FileReader();
-            const dataUrl = await new Promise<string>((resolve, reject) => {
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = reject;
-              reader.readAsDataURL(audioBlob);
-            });
-
-            convertedAudio = await puter.ai.speech2speech(dataUrl, {
-              voice: options.voice || '21m00Tcm4TlvDq8ikWAM',
-              model: options.model || 'eleven_multilingual_sts_v2',
-              output_format: options.output_format || 'mp3_44100_128',
-              removeBackgroundNoise: options.removeBackgroundNoise ?? false,
-              voiceSettings: options.voiceSettings,
-              testMode: options.testMode ?? false,
-            });
-          }
-        } catch (apiErr) {
-          console.error('Speech2Speech API error:', apiErr);
-          // Fallback to test mode to show functionality
-          console.log('Using test mode for demonstration...');
+        // Use speech2speech API from Puter SDK
+        if (typeof puter.ai.speech2speech === 'function') {
           convertedAudio = await puter.ai.speech2speech(audioBlob, {
             voice: options.voice || '21m00Tcm4TlvDq8ikWAM',
-            testMode: true, // Use test mode if live API fails
+            model: options.model || 'eleven_multilingual_sts_v2',
+            output_format: options.output_format || 'mp3_44100_128',
+            removeBackgroundNoise: options.removeBackgroundNoise ?? false,
+            voiceSettings: options.voiceSettings,
           });
+        } else {
+          throw new Error('Voice conversion API (speech2speech) is not available in the Puter SDK.');
         }
 
         // Convert to URL if needed
@@ -184,8 +156,10 @@ export const useOnyxSpeak = () => {
           url = convertedAudio.src;
         } else if (convertedAudio instanceof Blob) {
           url = URL.createObjectURL(convertedAudio);
+        } else if (convertedAudio && typeof convertedAudio === 'object' && 'url' in convertedAudio) {
+          url = convertedAudio.url;
         } else {
-          url = convertedAudio.toString();
+          url = convertedAudio?.toString() || URL.createObjectURL(audioBlob);
         }
 
         setAudioUrl(url);

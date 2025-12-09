@@ -983,9 +983,13 @@ const ChatApp = () => {
     toast.success(`Image generated with ${settings.imageModel}`);
   };
 
-  const handleNavigate = (section: 'images' | 'mindstore' | 'search' | 'settings' | 'logs' | 'analytics' | 'fluxes') => {
-    setCurrentView(section as any);
-    setMobileMenuOpen(false);
+  const handleNavigate = (section: 'images' | 'mindstore' | 'search' | 'settings' | 'logs' | 'analytics' | 'fluxes' | 'voice') => {
+    if (section === 'voice') {
+      navigate('/voice');
+    } else {
+      setCurrentView(section as any);
+      setMobileMenuOpen(false);
+    }
   };
 
   const handleUpdateTitle = (chatId: string, title: string) => {

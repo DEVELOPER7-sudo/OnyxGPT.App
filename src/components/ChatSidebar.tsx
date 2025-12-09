@@ -3,20 +3,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  MessageSquare,
-  Image,
-  Brain,
-  Search,
-  Settings,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  Trash2,
-  FileText,
-  Zap,
-  Bot,
-  BarChart3,
-} from 'lucide-react';
+   MessageSquare,
+   Image,
+   Brain,
+   Search,
+   Settings,
+   Plus,
+   ChevronLeft,
+   ChevronRight,
+   Trash2,
+   FileText,
+   Zap,
+   Bot,
+   BarChart3,
+   Volume2,
+ } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Chat } from '@/types/chat';
 
@@ -26,7 +27,7 @@ interface ChatSidebarProps {
   onNewChat: () => void;
   onSelectChat: (chatId: string) => void;
   onDeleteChat: (chatId: string) => Promise<void>;
-  onNavigate: (section: 'images' | 'mindstore' | 'search' | 'settings' | 'logs' | 'fluxes' | 'analytics') => void;
+  onNavigate: (section: 'images' | 'mindstore' | 'search' | 'settings' | 'logs' | 'fluxes' | 'analytics' | 'voice') => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
 }
@@ -171,6 +172,15 @@ const ChatSidebar = ({
         >
           <BarChart3 className="w-5 h-5" />
           {!collapsed && <span className="ml-2">Analytics</span>}
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start hover:bg-sidebar-accent"
+          size={collapsed ? 'icon' : 'default'}
+          onClick={() => onNavigate('voice')}
+        >
+          <Volume2 className="w-5 h-5" />
+          {!collapsed && <span className="ml-2">Voice</span>}
         </Button>
         <Button
           variant="ghost"

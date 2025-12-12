@@ -409,7 +409,10 @@ const ChatApp = () => {
     }
     
     if (webSearchEnabled) {
-       finalSystemPrompt += '\n\nNote: You may use web knowledge if your model supports it. Wrap web search findings in <research> tags.';
+       // When toggle is enabled, automatically inject /websearch command system prompt
+       // This makes AI treat ALL messages as web search queries without users seeing the command
+       const autoWebSearchPrompt = generateWebSearchSystemPrompt('research query');
+       finalSystemPrompt += '\n\n' + autoWebSearchPrompt;
      }
      if (deepSearchEnabled) {
        finalSystemPrompt += '\n\nNote: Prefer deeper step-by-step reasoning when needed. Use <stepbystep> tags for detailed breakdowns.';
@@ -651,30 +654,12 @@ const ChatApp = () => {
         }
       
       // Add web search instruction ONLY if enabled
-      if (webSearchEnabled) {
-        const webSearchInstruction = `
-      ## 🔍 Web Search URLs Requirement
-
-      When you perform web searches, you MUST:
-      1. Create a <websearch> block with all URLs listed
-      2. Format all searched URLs clearly in the block
-      3. Organize URLs by source type or relevance
-      4. Close the block with </websearch>
-
-      ### URL Format in <websearch> tags:
-      \`\`\`
-      <websearch>
-      ## URLs Searched
-      - [Source Title](https://url.com) - Brief description
-      - [Source Title](https://url.com) - Brief description
-
-      [Your answer with citations...]
-      </websearch>
-      \`\`\`
-
-      **CRITICAL**: Only use <websearch> tags when actually searching. Show all URLs you accessed.`;
-        finalSystemPrompt += webSearchInstruction;
-      }
+       if (webSearchEnabled) {
+         // When toggle is enabled, automatically inject /websearch command system prompt
+         // This makes AI treat ALL messages as web search queries without users seeing the command
+         const autoWebSearchPrompt = generateWebSearchSystemPrompt('research query');
+         finalSystemPrompt += '\n\n' + autoWebSearchPrompt;
+       }
       
       if (deepSearchEnabled) {
         finalSystemPrompt += '\n\nNote: Prefer deeper step-by-step reasoning when needed.';

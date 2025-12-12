@@ -20,6 +20,7 @@ import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { detectTriggersAndBuildPrompt, parseTriggeredResponse, getAllTriggers, deduplicateResponseContent } from '@/lib/triggers';
 import { chatMessageSchema } from '@/lib/validation';
 import { generateEnhancedSystemPrompt, TRIGGER_TAG_ENFORCEMENT_PREFIX } from '@/lib/enhanced-system-prompts';
+import { generateWebSearchSystemPrompt } from '@/lib/websearch-formatter';
 import { buildSystemPromptWithMemoryContext } from '@/lib/memory-context-integration';
 
 // Lazy load heavy components
@@ -196,10 +197,41 @@ const ChatApp = () => {
     }
   };
 
+  const handleWebSearchCommand = async (query: string, chatId: string, messages: Message[]) => {
+    /**
+     * Handle /websearch command
+     * Creates a structured websearch block with proper markdown formatting
+     * and sets webSearchEnabled to true for this query
+     */
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: query,
+      timestamp: Date.now(),
+    };
+
+    const updatedChat = { ...currentChat };
+    updatedChat.messages = [...messages, userMessage];
+    storage.updateChat(chatId, { messages: updatedChat.messages });
+    setChats(chats.map(c => c.id === chatId ? updatedChat : c));
+
+    // Temporarily enable web search for this query
+    const previousWebSearchState = webSearchEnabled;
+    setWebSearchEnabled(true);
+
+    try {
+      await handleTextChat(updatedChat.messages, chatId);
+    } finally {
+      // Restore previous web search state
+      setWebSearchEnabled(previousWebSearchState);
+    }
+  };
+
   const handleSendMessage = async (content: string, imageData?: { imageUrl: string; prompt: string }) => {
     if (!currentChatId || !currentChat) return;
 
     const isImageCommand = content.trim().startsWith('/img');
+    const isWebSearchCommand = content.trim().startsWith('/websearch');
     const isVisionRequest = !!imageData;
     
     const userMessage: Message = {
@@ -236,6 +268,9 @@ const ChatApp = () => {
     try {
       if (isImageCommand) {
         await handleImageGeneration(content.replace('/img', '').trim(), currentChatId);
+      } else if (isWebSearchCommand) {
+        const query = content.replace('/websearch', '').trim();
+        await handleWebSearchCommand(query, currentChatId, updatedChat.messages);
       } else if (isVisionRequest) {
         await handleVisionChat(imageData.imageUrl, imageData.prompt, updatedChat.messages, currentChatId);
       } else {
@@ -307,10 +342,16 @@ const ChatApp = () => {
       return;
     }
 
-    // Detect triggers and build system prompt
-    let { systemPrompt: triggerPrompt, detectedTriggers, enhancedSystemPrompt } = detectTriggersAndBuildPrompt(userText);
+    // Check if this is a /websearch command
+    const isWebSearchCommand = userText.trim().startsWith('/websearch');
+    const webSearchQuery = isWebSearchCommand 
+      ? userText.replace('/websearch', '').trim() 
+      : '';
     
-    // Merge default triggers (from settings) + selected triggers
+    // Detect triggers and build system prompt
+     let { systemPrompt: triggerPrompt, detectedTriggers, enhancedSystemPrompt } = detectTriggersAndBuildPrompt(userText);
+     
+     // Merge default triggers (from settings) + selected triggers
     let extraInstructions: string[] = [];
     if (settings.defaultTriggers && settings.defaultTriggers.length > 0) {
       const allTriggersData = getAllTriggers();
@@ -344,8 +385,11 @@ const ChatApp = () => {
       
     let finalSystemPrompt = baseSystemPrompt;
     
-    // ONLY add trigger tag enforcement if triggers were actually detected OR selected
-    if (detectedTriggers.length > 0 || extraInstructions.length > 0) {
+    // Add /websearch command prompt if detected
+    if (isWebSearchCommand && webSearchQuery) {
+      finalSystemPrompt = `${generateWebSearchSystemPrompt(webSearchQuery)}\n\n${TRIGGER_TAG_ENFORCEMENT_PREFIX}`;
+    } else if (detectedTriggers.length > 0 || extraInstructions.length > 0) {
+      // ONLY add trigger tag enforcement if triggers were actually detected OR selected
       finalSystemPrompt = `${TRIGGER_TAG_ENFORCEMENT_PREFIX}\n\n${baseSystemPrompt}`;
     } else {
       // No triggers - use basic system prompt
@@ -595,22 +639,46 @@ const ChatApp = () => {
      }
       
       // Build final system prompt - ONLY add trigger tag enforcement if triggers detected or explicitly selected
-      let baseSystemPrompt = triggerPrompt;
-      let finalSystemPrompt = baseSystemPrompt;
+        let baseSystemPrompt = triggerPrompt;
+        let finalSystemPrompt = baseSystemPrompt;
+        
+        // ONLY add trigger tag enforcement if triggers were actually detected OR selected
+        if (detectedTriggers.length > 0 || extraInstructions.length > 0) {
+          finalSystemPrompt = `${TRIGGER_TAG_ENFORCEMENT_PREFIX}\n\n${baseSystemPrompt}`;
+        } else {
+          // No triggers - use basic system prompt
+          finalSystemPrompt = 'Respond helpfully, truthfully, and concisely.';
+        }
       
-      // ONLY add trigger tag enforcement if triggers were actually detected OR selected
-      if (detectedTriggers.length > 0 || extraInstructions.length > 0) {
-        finalSystemPrompt = `${TRIGGER_TAG_ENFORCEMENT_PREFIX}\n\n${baseSystemPrompt}`;
-      } else {
-        // No triggers - use basic system prompt
-        finalSystemPrompt = 'Respond helpfully, truthfully, and concisely.';
+      // Add web search instruction ONLY if enabled
+      if (webSearchEnabled) {
+        const webSearchInstruction = `
+      ## 🔍 Web Search URLs Requirement
+
+      When you perform web searches, you MUST:
+      1. Create a <websearch> block with all URLs listed
+      2. Format all searched URLs clearly in the block
+      3. Organize URLs by source type or relevance
+      4. Close the block with </websearch>
+
+      ### URL Format in <websearch> tags:
+      \`\`\`
+      <websearch>
+      ## URLs Searched
+      - [Source Title](https://url.com) - Brief description
+      - [Source Title](https://url.com) - Brief description
+
+      [Your answer with citations...]
+      </websearch>
+      \`\`\`
+
+      **CRITICAL**: Only use <websearch> tags when actually searching. Show all URLs you accessed.`;
+        finalSystemPrompt += webSearchInstruction;
       }
-    if (webSearchEnabled) {
-      finalSystemPrompt += '\n\nNote: You may use web knowledge if your model supports it.';
-    }
-    if (deepSearchEnabled) {
-      finalSystemPrompt += '\n\nNote: Prefer deeper step-by-step reasoning when needed.';
-    }
+      
+      if (deepSearchEnabled) {
+        finalSystemPrompt += '\n\nNote: Prefer deeper step-by-step reasoning when needed.';
+      }
     
     // Log detected triggers in dev mode
     if (import.meta.env.DEV && settings.enableDebugLogs && detectedTriggers.length > 0) {

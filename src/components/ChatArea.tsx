@@ -559,7 +559,7 @@ const ChatArea = ({
                     }
                   }}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type a message or /img for images..."
+                  placeholder="Type a message, /img for images, or /websearch for research..."
                   maxLength={10000}
                   className="flex-1 min-h-[60px] max-h-[150px] resize-none text-base"
                   style={{ fontSize: '16px' }}
@@ -600,6 +600,26 @@ const ChatArea = ({
                  <Send className="w-4 h-4 md:w-5 md:h-5" />
                )}
              </Button>
+            </div>
+
+            {/* Web Search Toggle Below Prompt Box */}
+            <div className="flex items-center gap-3 px-1 py-2 border-t border-border/50">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={webSearchEnabled}
+                  onCheckedChange={onToggleWebSearch}
+                  className="h-4 w-8"
+                />
+                <Label className="text-sm font-medium cursor-pointer hover:text-primary transition-colors">
+                  Web Search
+                </Label>
+              </div>
+              
+              {webSearchEnabled && (
+                <Badge variant="secondary" className="text-xs">
+                  URLs will be listed in &lt;websearch&gt; tags
+                </Badge>
+              )}
             </div>
             </div>
             </div>

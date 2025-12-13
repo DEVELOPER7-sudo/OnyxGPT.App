@@ -53,26 +53,26 @@ const Header = ({ onMenuClick, showMenuButton = false, user, onSignOut }: Header
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center px-4 animate-fade-in">
+      <div className="container flex h-14 items-center px-3 md:px-4 animate-fade-in">
         {showMenuButton && (
           <Button
             variant="ghost"
             size="icon"
             onClick={onMenuClick}
-            className="md:hidden mr-2 transition-all duration-200 hover:scale-110"
+            className="md:hidden mr-1 h-8 w-8 transition-all duration-200 hover:scale-110"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-4 w-4" />
           </Button>
         )}
         
-        <div className="flex items-center gap-2 flex-1">
-          <div className="flex items-center gap-2 group cursor-pointer">
-            <img src={onyxLogo} alt="OnyxGPT logo" className="h-8 w-8 rounded-md shadow-sm" />
-            <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient bg-300% transition-all duration-300 group-hover:scale-105">
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 group cursor-pointer flex-shrink-0">
+            <img src={onyxLogo} alt="OnyxGPT logo" className="h-7 w-7 rounded-md shadow-sm" />
+            <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient bg-300% transition-all duration-300 group-hover:scale-105">
               OnyxGPT
             </h1>
           </div>
-          <span className="hidden sm:inline text-xs text-muted-foreground ml-2 animate-fade-in">
+          <span className="hidden sm:inline text-xs text-muted-foreground ml-1 flex-shrink-0 animate-fade-in">
             500+ AI Models
           </span>
         </div>
@@ -82,10 +82,10 @@ const Header = ({ onMenuClick, showMenuButton = false, user, onSignOut }: Header
           variant="ghost"
           size="icon"
           onClick={() => navigate('/voice')}
-          className="hidden md:flex mr-2 transition-all duration-200 hover:scale-110 hover:bg-primary/10"
+          className="hidden md:flex mr-1 h-8 w-8 transition-all duration-200 hover:scale-110 hover:bg-primary/10"
           title="Voice Chat"
         >
-          <Volume2 className="h-5 w-5" />
+          <Volume2 className="h-4 w-4" />
         </Button>
 
         {user || puterUser ? (

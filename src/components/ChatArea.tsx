@@ -280,11 +280,11 @@ const ChatArea = ({
   return (
      <div className="flex flex-col h-full w-full overflow-hidden">
        {/* Messages */}
-       <div className="flex-1 overflow-y-auto p-2 md:p-4 relative" ref={scrollRef}>
+       <div className="flex-1 overflow-y-auto p-2 md:p-4 relative min-h-0" ref={scrollRef}>
         {chat.messages.length === 0 ? (
           <WelcomeMessage />
         ) : (
-          <div className="max-w-4xl mx-auto space-y-4 pb-4">
+          <div className="max-w-4xl mx-auto space-y-3 pb-4">
             {chat.messages.map((message, idx) => (
               <div
                 key={message.id + '-' + idx}
@@ -530,26 +530,26 @@ const ChatArea = ({
 
 
       {/* Input Area */}
-      <div className="border-t border-border p-2 md:p-4 bg-card/50 backdrop-blur-sm flex-shrink-0 z-10 safe-bottom">
-        <div className="max-w-4xl mx-auto space-y-2 md:space-y-3">
+      <div className="border-t border-border p-2 md:p-3 bg-card/50 backdrop-blur-sm flex-shrink-0 z-10 safe-bottom">
+        <div className="max-w-4xl mx-auto space-y-1.5">
           {/* Image Preview */}
           {uploadedImage && (
             <div className="relative inline-block animate-scale-in hover:shadow-lg hover:shadow-primary/30 rounded-lg transition-all duration-300">
-              <img src={uploadedImage} alt="Upload preview" className="h-20 w-20 object-cover rounded-lg border border-primary/40 hover:border-primary/80 transition-all duration-300 hover:scale-105" />
+              <img src={uploadedImage} alt="Upload preview" className="h-16 w-16 object-cover rounded-lg border border-primary/40 hover:border-primary/80 transition-all duration-300 hover:scale-105" />
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive hover:bg-destructive/90 animate-scale-in hover:scale-110 transition-all duration-200"
+                className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive hover:bg-destructive/90 animate-scale-in hover:scale-110 transition-all duration-200"
                 onClick={() => setUploadedImage(null)}
               >
-                <X className="w-3 h-3" />
+                <X className="w-2.5 h-2.5" />
               </Button>
             </div>
           )}
 
           {/* Input with Character Counter */}
-          <div className="space-y-1">
-            <div className="flex gap-1 md:gap-2">
+          <div className="space-y-0.5">
+            <div className="flex gap-1 md:gap-1.5">
               <div className="flex-1 relative">
                 <Textarea
                   value={input}
@@ -561,10 +561,10 @@ const ChatArea = ({
                   onKeyPress={handleKeyPress}
                   placeholder="Type a message, /img for images, or /websearch for research..."
                   maxLength={10000}
-                  className="flex-1 min-h-[60px] max-h-[150px] resize-none text-base"
-                  style={{ fontSize: '16px' }}
+                  className="flex-1 min-h-[50px] max-h-[120px] resize-none text-sm"
+                  style={{ fontSize: '15px' }}
                 />
-                <span className="absolute bottom-2 right-2 text-xs text-muted-foreground">
+                <span className="absolute bottom-1 right-1 text-xs text-muted-foreground">
                   {input.length}/10000
                 </span>
               </div>
@@ -578,46 +578,46 @@ const ChatArea = ({
             <Button
                variant="ghost"
                size="icon"
-               className="h-10 w-10 flex-shrink-0 hover:scale-110 hover:bg-primary/10 transition-all duration-300 hover:text-primary"
+               className="h-9 w-9 flex-shrink-0 hover:scale-110 hover:bg-primary/10 transition-all duration-300 hover:text-primary"
                onClick={() => fileInputRef.current?.click()}
                title="Upload image for vision AI"
              >
-               <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
+               <Paperclip className="w-4 h-4" />
              </Button>
 
              <Button
                onClick={handleSend}
                disabled={isLoading || isAnalyzing || isUploading}
                className={cn(
-                 "h-10 w-10 flex-shrink-0 transition-all duration-300 hover:scale-110",
+                 "h-9 w-9 flex-shrink-0 transition-all duration-300 hover:scale-110",
                  isLoading || isAnalyzing || isUploading ? "bg-primary/70" : "hover:shadow-lg hover:shadow-primary/50"
                )}
                size="icon"
              >
                {isLoading || isAnalyzing || isUploading ? (
-                 <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
+                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                ) : (
-                 <Send className="w-4 h-4 md:w-5 md:h-5" />
+                 <Send className="w-3.5 h-3.5" />
                )}
              </Button>
             </div>
 
             {/* Web Search Toggle Below Prompt Box */}
-            <div className="flex items-center gap-3 px-1 py-2 border-t border-border/50">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-0.5 py-1 border-t border-border/50">
+              <div className="flex items-center gap-1.5">
                 <Switch
                   checked={webSearchEnabled}
                   onCheckedChange={onToggleWebSearch}
-                  className="h-4 w-8"
+                  className="h-3.5 w-7"
                 />
-                <Label className="text-sm font-medium cursor-pointer hover:text-primary transition-colors">
+                <Label className="text-xs font-medium cursor-pointer hover:text-primary transition-colors">
                   Web Search
                 </Label>
               </div>
               
               {webSearchEnabled && (
-                <Badge variant="secondary" className="text-xs">
-                  URLs will be listed in &lt;websearch&gt; tags
+                <Badge variant="secondary" className="text-xs py-0 px-1.5">
+                  URLs in &lt;websearch&gt;
                 </Badge>
               )}
             </div>

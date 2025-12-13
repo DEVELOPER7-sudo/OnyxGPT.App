@@ -13,11 +13,13 @@ When you perform web searches, you MUST create a **<websearch></websearch> block
 <websearch>
 ## URLs Searched
 
-- [Source Title](https://example.com/article) - Description
-- [Source Title](https://example.com/page) - Description
-- [Source Title](https://example.com/research) - Description
+- [Source Title](https://example.com/article) - Description of content or relevance
+- [Source Title](https://example.com/page) - Description of content or relevance
+- [Source Title](https://example.com/research) - Description of content or relevance
 
-[Your answer with citations from these sources...]
+## Findings
+
+[Your professional answer with citations from these sources using markdown link format]
 </websearch>
 \`\`\`
 
@@ -28,6 +30,7 @@ When you perform web searches, you MUST create a **<websearch></websearch> block
 3. **Organize by**: Source type, relevance, or category
 4. **Always include** the full working URL
 5. **Add description** - What the source contains or its relevance
+6. **Separate sections** - Keep URLs section distinct from findings section
 
 ### Example Web Search Block:
 
@@ -35,12 +38,20 @@ When you perform web searches, you MUST create a **<websearch></websearch> block
 <websearch>
 ## URLs Searched
 
-- [TechCrunch](https://techcrunch.com/2025/12/11/ai-news/) - Latest AI developments
-- [OpenAI Blog](https://openai.com/blog) - Official announcements
-- [ArXiv Papers](https://arxiv.org/recent) - Recent research papers
-- [GitHub Trending](https://github.com/trending) - Popular repositories
+- [TechCrunch](https://techcrunch.com/2025/12/11/ai-news/) - Latest AI developments and announcements
+- [OpenAI Blog](https://openai.com/blog) - Official product and research announcements
+- [ArXiv](https://arxiv.org/list/cs.AI/recent) - Recent AI research papers
+- [GitHub Trending](https://github.com/trending) - Popular open source projects
 
-Based on my search of the latest sources, here are the key developments...
+## Findings
+
+According to [TechCrunch](https://techcrunch.com/2025/12/11/ai-news/), [specific finding].
+
+[OpenAI Blog](https://openai.com/blog) indicates [specific finding].
+
+Recent research on [ArXiv](https://arxiv.org/list/cs.AI/recent) shows [specific finding].
+
+Popular projects tracked on [GitHub Trending](https://github.com/trending) demonstrate [specific finding].
 </websearch>
 \`\`\`
 
@@ -50,10 +61,12 @@ Based on my search of the latest sources, here are the key developments...
 2. **ALWAYS list ALL URLs** - Transparency is mandatory
 3. **Keep organized** - Group similar sources together
 4. **Close properly** - End with \`</websearch>\`
-5. **Put answer INSIDE block** - Citations go right in the same block
-6. **Be honest** - If web search is not enabled, DO NOT use this block
+5. **Add ## Findings section** - Separate from the URLs section
+6. **Cite sources** - Use [Source Name](URL) format in findings
+7. **Be honest** - If web search is not enabled, DO NOT use this block
+8. **No preamble or narrative** - Don't add text before \`<websearch>\` or after \`</websearch>\`
 
-This block is SEPARATE from trigger tags and comes FIRST in your response.`;
+This block is SEPARATE from trigger tags and contains the complete structured response.`;
 
 export const WEB_SEARCH_REQUIREMENTS = `## 🔍 Web Search Requirements
 

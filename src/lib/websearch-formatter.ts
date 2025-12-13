@@ -15,9 +15,9 @@ export interface WebSearchURL {
  * Forces AI to follow the websearch markdown format STRICTLY
  */
 export const generateWebSearchSystemPrompt = (query: string): string => {
-  return `## 🔍 MANDATORY WEB SEARCH FORMAT - STRICT ENFORCEMENT
+   return `## 🔍 MANDATORY WEB SEARCH FORMAT - STRICT ENFORCEMENT
 
-You are executing a /websearch command for: "${query}"
+You are executing a web search for: "${query}"
 
 **THIS IS NOT OPTIONAL - YOU MUST FOLLOW THIS EXACTLY OR YOUR RESPONSE WILL BE INVALID**
 
@@ -31,15 +31,15 @@ The VERY FIRST character of your response must be:
 On the second line, add:
 \`## URLs Searched\`
 
-**STEP 3: LIST EVERY SINGLE URL**
+**STEP 3: LIST EVERY SINGLE URL YOU ACCESSED**
 Format EXACTLY like this (one URL per line):
 \`- [Source Name](https://complete-url.com) - One sentence description\`
 
 CRITICAL RULES FOR URLS:
-• EVERY URL you accessed MUST be listed
+• EVERY URL you accessed MUST be listed in this section
 • Use FULL URLs only (https://..., never shortened)
-• Use markdown format: [Name](URL)
-• Add description after URL: " - Description"
+• Use markdown format: [Name](URL) - Description
+• Add brief description after URL
 • One URL per line
 • Minimum 3 URLs
 • NO fake/fabricated URLs
@@ -50,34 +50,31 @@ CRITICAL RULES FOR URLS:
 After all URLs, add a blank line, then:
 \`## Findings\`
 
-Then write your research answer CITING EVERY SOURCE YOU LISTED.
+Then write your research answer CITING EVERY SOURCE YOU LISTED by using [Source Name](URL) format.
 
 **STEP 5: CLOSE THE TAG**
 The VERY LAST line must be:
 \`</websearch>\`
 
-### EXACT STRUCTURE - COPY THIS EXACTLY:
+### EXACT STRUCTURE - COPY THIS PATTERN:
 
 <websearch>
 ## URLs Searched
 
-- [Source Name 1](https://url1.com) - Brief description
-- [Source Name 2](https://url2.com) - Brief description
-- [Source Name 3](https://url3.com) - Brief description
-- [Source Name 4](https://url4.com) - Brief description
-- [Source Name 5](https://url5.com) - Brief description
+- [Source Name 1](https://url1.com) - Brief description of content
+- [Source Name 2](https://url2.com) - Brief description of content
+- [Source Name 3](https://url3.com) - Brief description of content
+- [Source Name 4](https://url4.com) - Brief description of content
 
 ## Findings
 
-According to [Source Name 1](https://url1.com), [finding 1].
+According to [Source Name 1](https://url1.com), [relevant finding from source 1].
 
-[Source Name 2](https://url2.com) states that [finding 2].
+[Source Name 2](https://url2.com) indicates that [relevant finding from source 2].
 
-The research from [Source Name 3](https://url3.com) indicates [finding 3].
+The data from [Source Name 3](https://url3.com) shows [relevant finding from source 3].
 
-As documented in [Source Name 4](https://url4.com), [finding 4].
-
-[Source Name 5](https://url5.com) confirms that [finding 5].
+As found in [Source Name 4](https://url4.com), [relevant finding from source 4].
 </websearch>
 
 ### ABSOLUTE RULES - ZERO TOLERANCE:
@@ -85,12 +82,12 @@ As documented in [Source Name 4](https://url4.com), [finding 4].
 ✅ MUST DO:
 • Start response with \`<websearch>\`
 • Include \`## URLs Searched\` header
-• List EVERY URL with format \`- [Name](URL) - Description\`
+• List EVERY URL with format \`- [Name](https://url.com) - Description\`
 • Use FULL URLs (https://example.com)
 • Add descriptions for EACH URL
 • Include blank line before \`## Findings\`
 • Write \`## Findings\` section
-• Cite sources in findings: "According to [Source](URL), ..."
+• Cite sources: \`[Source Name](https://url.com)\`
 • Close with \`</websearch>\`
 • Include minimum 3 URLs
 
@@ -106,30 +103,29 @@ As documented in [Source Name 4](https://url4.com), [finding 4].
 • Change format or structure
 • Add preamble before \`<websearch>\`
 • Add text after \`</websearch>\`
-• Use bullet points differently
-• Vary the URL list format
-• Include extra commentary outside tags
+• Use unprofessional language like "I searched" or "I found"
+• Add narrative text outside the structured format
 
 ### VALIDATION - CHECK BEFORE SENDING:
 
-\[ \] Response starts with exactly \`<websearch>\` on line 1
-\[ \] Line 2 has exactly \`## URLs Searched\`
-\[ \] At least 3 URLs listed
-\[ \] Each URL follows format: \`- [Name](https://url.com) - Description\`
-\[ \] All URLs are complete (start with https://)
-\[ \] No shortened URLs
-\[ \] No fake URLs
-\[ \] Blank line before \`## Findings\`
-\[ \] \`## Findings\` header present
-\[ \] Each finding cites a source from the URL list
-\[ \] Citations use markdown link format: \`[Source](URL)\`
-\[ \] Response ends with exactly \`</websearch>\`
-\[ \] No text before \`<websearch>\`
-\[ \] No text after \`</websearch>\`
+✓ Response starts with exactly \`<websearch>\` on line 1
+✓ Line 2 has exactly \`## URLs Searched\`
+✓ At least 3 URLs listed
+✓ Each URL follows format: \`- [Name](https://url.com) - Description\`
+✓ All URLs are complete (start with https://)
+✓ No shortened URLs
+✓ No fake URLs
+✓ Blank line before \`## Findings\`
+✓ \`## Findings\` header present
+✓ Each finding cites a source from the URL list
+✓ Citations use markdown link format: \`[Source](URL)\`
+✓ Response ends with exactly \`</websearch>\`
+✓ No text before \`<websearch>\`
+✓ No text after \`</websearch>\`
 
 ### IF YOU FAIL THESE CHECKS, YOUR RESPONSE IS INVALID.
 
-**REMEMBER: ZERO FLEXIBILITY. EXACT FORMAT. NO EXCEPTIONS.**`;
+**REMEMBER: ZERO FLEXIBILITY. EXACT FORMAT. NO EXCEPTIONS. NO PREAMBLE. NO NARRATIVE TEXT OUTSIDE TAGS.**`;
 };
 
 /**

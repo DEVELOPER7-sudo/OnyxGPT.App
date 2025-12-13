@@ -388,6 +388,11 @@ const ChatApp = () => {
     // Add /websearch command prompt if detected
     if (isWebSearchCommand && webSearchQuery) {
       finalSystemPrompt = `${generateWebSearchSystemPrompt(webSearchQuery)}\n\n${TRIGGER_TAG_ENFORCEMENT_PREFIX}`;
+    } else if (webSearchEnabled) {
+      // When toggle is enabled, inject web search system prompt
+      // This makes AI treat ALL messages as web search queries
+      const autoWebSearchPrompt = generateWebSearchSystemPrompt('automatic web search enabled');
+      finalSystemPrompt = `${autoWebSearchPrompt}\n\n${TRIGGER_TAG_ENFORCEMENT_PREFIX}`;
     } else if (detectedTriggers.length > 0 || extraInstructions.length > 0) {
       // ONLY add trigger tag enforcement if triggers were actually detected OR selected
       finalSystemPrompt = `${TRIGGER_TAG_ENFORCEMENT_PREFIX}\n\n${baseSystemPrompt}`;
@@ -407,13 +412,6 @@ const ChatApp = () => {
         finalSystemPrompt += '\nEmphasis: Use <brainstorm> and <evaluate> tags for creative exploration.';
       }
     }
-    
-    if (webSearchEnabled) {
-       // When toggle is enabled, automatically inject /websearch command system prompt
-       // This makes AI treat ALL messages as web search queries without users seeing the command
-       const autoWebSearchPrompt = generateWebSearchSystemPrompt('research query');
-       finalSystemPrompt += '\n\n' + autoWebSearchPrompt;
-     }
      if (deepSearchEnabled) {
        finalSystemPrompt += '\n\nNote: Prefer deeper step-by-step reasoning when needed. Use <stepbystep> tags for detailed breakdowns.';
      }
@@ -1148,7 +1146,7 @@ const ChatApp = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-full bg-background overflow-hidden relative">
+    <div className="flex flex-col h-screen w-screen bg-background overflow-hidden relative">
       <MotionBackground />
       <Header 
         showMenuButton={true}
@@ -1157,13 +1155,13 @@ const ChatApp = () => {
         onSignOut={signOut}
       />
 
-      <div className="flex flex-1 overflow-hidden min-h-0">
+      <div className="flex flex-1 overflow-hidden min-h-0 w-full">
         {/* Sidebar */}
         <div
           className={cn(
             'transition-all duration-300 ease-in-out',
             'md:static md:translate-x-0',
-            'fixed inset-y-0 left-0 z-40 w-72 md:w-auto',
+            'fixed inset-y-0 left-0 z-40 w-72 md:w-auto md:flex-shrink-0',
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
@@ -1193,7 +1191,7 @@ const ChatApp = () => {
       )}
 
         {/* Main Content */}
-        <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
+        <div className="flex-1 overflow-hidden min-h-0 max-h-full flex flex-col w-full">
         {currentView === 'chat' && (
           <ChatArea
             chat={currentChat}

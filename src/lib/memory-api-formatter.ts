@@ -53,17 +53,24 @@ export const formatMemoryEntry = (memory: Memory): MemoryEntry => {
 /**
  * Create simplified memory format for mindstore API parameter
  * Converts title to key/value format for Puter mindstore API compatibility
+ * Truncates to max 512 chars per field for API limits
  */
 export const formatMemoriesForMindstore = (memories: Memory[]): SimplifiedMemory[] => {
   const now = Date.now();
+  const MAX_LENGTH = 512; // Max length per field for Puter API
+  
   return memories
     .filter(m => !m.expiresAt || m.expiresAt > now) // Only active memories
     .map(m => {
       const title = m.title || '';
+      // Truncate to max length to prevent API errors
+      const truncatedTitle = title.length > MAX_LENGTH 
+        ? title.substring(0, MAX_LENGTH - 3) + '...' 
+        : title;
       
       return {
-        key: title,
-        value: title, // Use title as both key and value
+        key: truncatedTitle,
+        value: truncatedTitle, // Use truncated title as both key and value
       };
     })
     .filter(m => m.key); // Ensure key exists

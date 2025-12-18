@@ -46,6 +46,7 @@ export interface Memory {
   importance?: 'low' | 'medium' | 'high';
   tags?: string[];
   autoExtracted?: boolean;
+  organization?: string;
 }
 
 export interface AppSettings {

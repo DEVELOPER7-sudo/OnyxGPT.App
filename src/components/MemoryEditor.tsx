@@ -36,6 +36,16 @@ const PRESET_CATEGORIES = [
   'Other'
 ];
 
+const ORGANIZATIONS = [
+  'Personal',
+  'Work',
+  'Education',
+  'Freelance',
+  'Startup',
+  'Enterprise',
+  'Other'
+];
+
 const IMPORTANCE_COLORS = {
   low: 'bg-blue-500/20 text-blue-400',
   medium: 'bg-yellow-500/20 text-yellow-400',
@@ -48,6 +58,7 @@ const MemoryEditor = () => {
   const [newKey, setNewKey] = useState('');
   const [newValue, setNewValue] = useState('');
   const [newCategory, setNewCategory] = useState<string>('Personal');
+  const [newOrganization, setNewOrganization] = useState<string>('Personal');
   const [newImportance, setNewImportance] = useState<'low' | 'medium' | 'high'>('medium');
   const [newTags, setNewTags] = useState('');
   const [newExpiresIn, setNewExpiresIn] = useState<string>('never');
@@ -55,7 +66,9 @@ const MemoryEditor = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterImportance, setFilterImportance] = useState<string>('all');
+  const [filterOrganization, setFilterOrganization] = useState<string>('all');
   const [editCategory, setEditCategory] = useState<string>('');
+  const [editOrganization, setEditOrganization] = useState<string>('');
   const [editImportance, setEditImportance] = useState<'low' | 'medium' | 'high'>('medium');
 
   useEffect(() => {
@@ -80,8 +93,12 @@ const MemoryEditor = () => {
       filtered = filtered.filter(m => m.importance === filterImportance);
     }
 
+    if (filterOrganization !== 'all') {
+      filtered = filtered.filter(m => m.organization === filterOrganization);
+    }
+
     setFilteredMemories(filtered);
-  }, [searchQuery, filterCategory, filterImportance, memories]);
+  }, [searchQuery, filterCategory, filterImportance, filterOrganization, memories]);
 
   const calculateExpiresAt = (expiresIn: string): number | undefined => {
     if (expiresIn === 'never') return undefined;
@@ -118,7 +135,8 @@ const MemoryEditor = () => {
       importance: newImportance,
       tags: tags.length > 0 ? tags : undefined,
       expiresAt: calculateExpiresAt(newExpiresIn),
-      autoExtracted: false
+      autoExtracted: false,
+      organization: newOrganization || 'Personal'
     };
 
     storage.addMemory(memory);
@@ -126,13 +144,14 @@ const MemoryEditor = () => {
     setNewKey('');
     setNewValue('');
     setNewCategory('Personal');
+    setNewOrganization('Personal');
     setNewImportance('medium');
     setNewTags('');
     setNewExpiresIn('never');
     toast.success('Memory added');
   };
 
-  const handleUpdate = (id: string, key: string, value: string, category: string, importance: 'low' | 'medium' | 'high', tags: string[], expiresAt?: number) => {
+  const handleUpdate = (id: string, key: string, value: string, category: string, importance: 'low' | 'medium' | 'high', tags: string[], expiresAt?: number, organization?: string) => {
     const result = memorySchema.safeParse({ key, value });
     
     if (!result.success) {
@@ -146,7 +165,8 @@ const MemoryEditor = () => {
       category,
       importance,
       tags: tags.length > 0 ? tags : undefined,
-      expiresAt
+      expiresAt,
+      organization: organization || 'Personal'
     });
     
     setMemories(storage.getMemories());
@@ -164,10 +184,11 @@ const MemoryEditor = () => {
     setSearchQuery('');
     setFilterCategory('all');
     setFilterImportance('all');
+    setFilterOrganization('all');
   };
 
   const categories = storage.getMemoryCategories();
-  const hasActiveFilters = searchQuery || filterCategory !== 'all' || filterImportance !== 'all';
+  const hasActiveFilters = searchQuery || filterCategory !== 'all' || filterImportance !== 'all' || filterOrganization !== 'all';
 
   const getCategoryStats = () => {
     const stats: Record<string, number> = {};
@@ -227,34 +248,48 @@ const MemoryEditor = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Category</label>
-                    <Select value={newCategory} onValueChange={setNewCategory}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PRESET_CATEGORIES.map(cat => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                   <div>
+                     <label className="text-sm text-muted-foreground mb-1 block">Category</label>
+                     <Select value={newCategory} onValueChange={setNewCategory}>
+                       <SelectTrigger>
+                         <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent>
+                         {PRESET_CATEGORIES.map(cat => (
+                           <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   </div>
 
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">Importance</label>
-                    <Select value={newImportance} onValueChange={(v: any) => setNewImportance(v)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                   <div>
+                     <label className="text-sm text-muted-foreground mb-1 block">Importance</label>
+                     <Select value={newImportance} onValueChange={(v: any) => setNewImportance(v)}>
+                       <SelectTrigger>
+                         <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="low">Low</SelectItem>
+                         <SelectItem value="medium">Medium</SelectItem>
+                         <SelectItem value="high">High</SelectItem>
+                       </SelectContent>
+                     </Select>
+                   </div>
+                 </div>
+
+                 <div>
+                   <label className="text-sm text-muted-foreground mb-1 block">Organization</label>
+                   <Select value={newOrganization} onValueChange={setNewOrganization}>
+                     <SelectTrigger>
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent>
+                       {ORGANIZATIONS.map(org => (
+                         <SelectItem key={org} value={org}>{org}</SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+                 </div>
 
                 <div>
                   <label className="text-sm text-muted-foreground mb-1 block">Tags (comma-separated)</label>
@@ -305,37 +340,49 @@ const MemoryEditor = () => {
                   />
                 </div>
 
-                <div className="flex gap-2">
-                  <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map(cat => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="flex gap-2 flex-wrap">
+                   <Select value={filterCategory} onValueChange={setFilterCategory}>
+                     <SelectTrigger className="flex-1 min-w-[150px]">
+                       <SelectValue placeholder="Category" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="all">All Categories</SelectItem>
+                       {categories.map(cat => (
+                         <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
 
-                  <Select value={filterImportance} onValueChange={setFilterImportance}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Importance" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Importance</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
+                   <Select value={filterImportance} onValueChange={setFilterImportance}>
+                     <SelectTrigger className="flex-1 min-w-[150px]">
+                       <SelectValue placeholder="Importance" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="all">All Importance</SelectItem>
+                       <SelectItem value="high">High</SelectItem>
+                       <SelectItem value="medium">Medium</SelectItem>
+                       <SelectItem value="low">Low</SelectItem>
+                     </SelectContent>
+                   </Select>
 
-                  {hasActiveFilters && (
-                    <Button variant="outline" size="icon" onClick={clearFilters}>
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
+                   <Select value={filterOrganization} onValueChange={setFilterOrganization}>
+                     <SelectTrigger className="flex-1 min-w-[150px]">
+                       <SelectValue placeholder="Organization" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="all">All Organizations</SelectItem>
+                       {ORGANIZATIONS.map(org => (
+                         <SelectItem key={org} value={org}>{org}</SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+
+                   {hasActiveFilters && (
+                     <Button variant="outline" size="icon" onClick={clearFilters}>
+                       <X className="w-4 h-4" />
+                     </Button>
+                   )}
+                 </div>
               </div>
             </Card>
 
@@ -390,6 +437,16 @@ const MemoryEditor = () => {
                               </SelectContent>
                             </Select>
                           </div>
+                          <Select value={editOrganization} onValueChange={setEditOrganization}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ORGANIZATIONS.map(org => (
+                                <SelectItem key={org} value={org}>{org}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <Input
                             defaultValue={memory.tags?.join(', ') || ''}
                             placeholder="Tags (comma-separated)"
@@ -397,15 +454,15 @@ const MemoryEditor = () => {
                           />
                           <div className="flex gap-2">
                             <Button
-                              onClick={() => {
-                                const key = (document.getElementById(`key-${memory.id}`) as HTMLInputElement).value;
-                                const value = (document.getElementById(`value-${memory.id}`) as HTMLTextAreaElement).value;
-                                const tagsInput = (document.getElementById(`tags-${memory.id}`) as HTMLInputElement).value;
-                                const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
-                                handleUpdate(memory.id, key, value, editCategory, editImportance, tags, memory.expiresAt);
-                              }}
-                              className="flex-1"
-                            >
+                               onClick={() => {
+                                 const key = (document.getElementById(`key-${memory.id}`) as HTMLInputElement).value;
+                                 const value = (document.getElementById(`value-${memory.id}`) as HTMLTextAreaElement).value;
+                                 const tagsInput = (document.getElementById(`tags-${memory.id}`) as HTMLInputElement).value;
+                                 const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
+                                 handleUpdate(memory.id, key, value, editCategory, editImportance, tags, memory.expiresAt, editOrganization);
+                               }}
+                               className="flex-1"
+                             >
                               <Save className="w-4 h-4 mr-2" />
                               Save
                             </Button>
@@ -426,6 +483,11 @@ const MemoryEditor = () => {
                               {memory.category && (
                                 <Badge variant="outline" className="text-xs">
                                   {memory.category}
+                                </Badge>
+                              )}
+                              {memory.organization && (
+                                <Badge variant="secondary" className="text-xs bg-purple-500/20 text-purple-400">
+                                  {memory.organization}
                                 </Badge>
                               )}
                               {memory.importance && (
@@ -470,17 +532,18 @@ const MemoryEditor = () => {
                           
                           <div className="flex gap-2">
                             <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setEditingId(memory.id);
-                                setEditCategory(memory.category || 'Personal');
-                                setEditImportance(memory.importance || 'medium');
-                              }}
-                              className="flex-1"
-                            >
-                              Edit
-                            </Button>
+                               variant="outline"
+                               size="sm"
+                               onClick={() => {
+                                 setEditingId(memory.id);
+                                 setEditCategory(memory.category || 'Personal');
+                                 setEditOrganization(memory.organization || 'Personal');
+                                 setEditImportance(memory.importance || 'medium');
+                               }}
+                               className="flex-1"
+                             >
+                               Edit
+                             </Button>
                             <Button
                               variant="destructive"
                               size="sm"

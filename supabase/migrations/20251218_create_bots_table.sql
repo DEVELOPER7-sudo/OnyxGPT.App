@@ -2,11 +2,13 @@
 CREATE TABLE IF NOT EXISTS bots (
   uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   creator_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  creator_username TEXT,
   name TEXT NOT NULL,
   description TEXT,
   category TEXT,
   pfp_url TEXT,
   system_prompt TEXT NOT NULL,
+  model_id TEXT NOT NULL DEFAULT 'gpt-5',
   visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'unlisted', 'public')),
   capabilities JSONB DEFAULT '{"memory": false, "files": false, "tools": []}'::JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

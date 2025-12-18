@@ -1,17 +1,21 @@
 import { Bot } from '@/types/chat';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Users, Lock, Eye } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Users, Lock, Eye, Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BotCardProps {
   bot: Bot;
   onClick?: () => void;
+  isOwner?: boolean;
 }
 
-const BotCard = ({ bot, onClick }: BotCardProps) => {
+const BotCard = ({ bot, onClick, isOwner = false }: BotCardProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleClick = () => {
     if (onClick) {
@@ -19,6 +23,11 @@ const BotCard = ({ bot, onClick }: BotCardProps) => {
     } else {
       navigate(`/bot/${bot.uuid}`);
     }
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/bot/${bot.uuid}/edit`);
   };
 
   const getVisibilityIcon = () => {
@@ -50,7 +59,18 @@ const BotCard = ({ bot, onClick }: BotCardProps) => {
               {bot.name.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="flex gap-1">
+          <div className="flex gap-1 items-start">
+            {user?.id === bot.creator_id && (
+              <Button
+                onClick={handleEdit}
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 hover:bg-primary/10"
+                title="Edit bot"
+              >
+                <Edit2 className="w-3 h-3" />
+              </Button>
+            )}
             <Badge variant="outline" className="text-xs gap-1">
               {getVisibilityIcon()}
               {bot.visibility}
@@ -70,17 +90,25 @@ const BotCard = ({ bot, onClick }: BotCardProps) => {
           {bot.description || 'No description provided'}
         </CardDescription>
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Users className="w-3 h-3" />
-            {bot.usage_count || 0} uses
-          </span>
-          <span className="text-xs">
-            {new Date(bot.created_at).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-            })}
-          </span>
+        <div className="space-y-2 text-xs text-muted-foreground">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              {bot.usage_count || 0} uses
+            </span>
+            <span className="text-xs">
+              {new Date(bot.created_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+              })}
+            </span>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t">
+            <span className="text-xs">By {bot.creator_username || 'Unknown'}</span>
+            <Badge variant="outline" className="text-xs">
+              {bot.model_id}
+            </Badge>
+          </div>
         </div>
       </CardContent>
     </Card>

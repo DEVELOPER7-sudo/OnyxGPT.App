@@ -10,6 +10,7 @@ import { Loader2, Plus, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import MotionBackground from '@/components/MotionBackground';
+import { useTheme } from '@/hooks/useTheme';
 
 const CATEGORIES = [
   'all',
@@ -30,20 +31,26 @@ const BotsGallery = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
+  // Apply main app theme from user settings
+  useTheme();
+
   useEffect(() => {
     const loadBots = async () => {
       try {
         setLoading(true);
+        // Pass user?.id even if undefined - service handles both authenticated and guest
         const botList = await botService.fetchBots(user?.id, selectedCategory);
         setBots(botList);
       } catch (error) {
         console.error('Error loading bots:', error);
         toast.error('Failed to load bots');
+        setBots([]); // Set empty array on error
       } finally {
         setLoading(false);
       }
     };
 
+    // Always load bots, even if not authenticated (shows public bots)
     loadBots();
   }, [user?.id, selectedCategory]);
 
@@ -78,7 +85,13 @@ const BotsGallery = () => {
             {/* Action Buttons */}
             <div className="flex gap-2 mb-6">
               <Button
-                onClick={() => navigate('/bot/create')}
+                onClick={() => {
+                  if (!user) {
+                    toast.error('You must be logged in to create a bot');
+                    return;
+                  }
+                  navigate('/bot/create');
+                }}
                 className="gap-2"
                 size="sm"
               >

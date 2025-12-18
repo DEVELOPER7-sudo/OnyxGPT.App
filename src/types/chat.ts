@@ -90,11 +90,13 @@ export interface CustomBot {
 export interface Bot {
   uuid: string;
   creator_id: string;
+  creator_username?: string;
   name: string;
   description?: string;
   category?: string;
   pfp_url?: string;
   system_prompt: string;
+  model_id: string;
   visibility: 'private' | 'unlisted' | 'public';
   capabilities: {
     memory: boolean;
@@ -121,6 +123,7 @@ export interface BotConfig {
   category: string;
   pfpUrl?: string;
   systemPrompt: string;
+  model_id: string;
   visibility: 'private' | 'unlisted' | 'public';
   capabilities: {
     memory: boolean;

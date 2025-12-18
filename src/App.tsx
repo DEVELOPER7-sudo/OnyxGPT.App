@@ -32,6 +32,7 @@ const App = () => (
           {/* Bot Routes */}
           <Route path="/bots" element={<ProtectedRoute><BotsGallery /></ProtectedRoute>} />
           <Route path="/bot/create" element={<ProtectedRoute><BotCreator /></ProtectedRoute>} />
+          <Route path="/bot/:uuid/edit" element={<ProtectedRoute><BotCreator /></ProtectedRoute>} />
           <Route path="/bot/:uuid" element={<ProtectedRoute><BotLauncher /></ProtectedRoute>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

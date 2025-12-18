@@ -101,15 +101,8 @@ const BotLauncher = () => {
     }
   }, []);
 
-  // Apply theme if bot has custom theme
-  useTheme({
-    textModel: 'gpt-5',
-    imageModel: 'flux-puter',
-    temperature: 0.7,
-    maxTokens: 2048,
-    enableWebSearch: false,
-    enableDeepSearch: false,
-  });
+  // Apply main app theme from user settings
+  useTheme();
 
   // Persist chats locally
   useChatPersistence(state.chats, state.currentChatId);
@@ -244,7 +237,7 @@ You can switch between chats using the sidebar or create a new chat. However, **
       ];
 
       const response = await puter.ai.chat(formattedMessages, {
-        model: 'gpt-5',
+        model: bot.model_id,
         stream: true,
         temperature: 0.7,
         max_tokens: 2048,

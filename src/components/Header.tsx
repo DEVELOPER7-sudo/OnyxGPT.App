@@ -82,7 +82,7 @@ const Header = ({ onMenuClick, showMenuButton = false, user, onSignOut }: Header
           variant="ghost"
           size="icon"
           onClick={() => navigate('/bots')}
-          className="hidden md:flex mr-1 h-8 w-8 transition-all duration-200 hover:scale-110 hover:bg-primary/10"
+          className="mr-1 h-8 w-8 transition-all duration-200 hover:scale-110 hover:bg-primary/10"
           title="Bots Gallery"
         >
           <Bot className="h-4 w-4" />

@@ -6,31 +6,36 @@ export const botService = {
    * Fetch all public bots and user's own bots
    */
   async fetchBots(userId?: string, category?: string): Promise<Bot[]> {
-    let query = supabase.from('bots').select('*');
+    try {
+      let query = supabase.from('bots').select('*');
 
-    // Filter by visibility
-    if (userId) {
-      query = query.or(`visibility.eq.public,creator_id.eq.${userId}`);
-    } else {
-      query = query.eq('visibility', 'public');
+      // Filter by visibility
+      if (userId) {
+        query = query.or(`visibility.eq.public,creator_id.eq.${userId}`);
+      } else {
+        query = query.eq('visibility', 'public');
+      }
+
+      // Filter by category if provided
+      if (category && category !== 'all') {
+        query = query.eq('category', category);
+      }
+
+      // Order by creation date
+      query = query.order('created_at', { ascending: false });
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching bots:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in fetchBots:', error);
+      return [];
     }
-
-    // Filter by category if provided
-    if (category && category !== 'all') {
-      query = query.eq('category', category);
-    }
-
-    // Order by creation date
-    query = query.order('created_at', { ascending: false });
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching bots:', error);
-      throw error;
-    }
-
-    return data || [];
   },
 
   /**
@@ -67,6 +72,7 @@ export const botService = {
   async createBot(
     config: BotConfig,
     userId: string,
+    creatorUsername: string,
     pfpFile?: File
   ): Promise<Bot> {
     let pfpUrl = config.pfpUrl;
@@ -92,11 +98,13 @@ export const botService = {
       .insert([
         {
           creator_id: userId,
+          creator_username: creatorUsername,
           name: config.name,
           description: config.description,
           category: config.category,
           pfp_url: pfpUrl,
           system_prompt: config.systemPrompt,
+          model_id: config.model_id,
           visibility: config.visibility,
           capabilities: config.capabilities,
         },
@@ -147,6 +155,7 @@ export const botService = {
     if (config.description) updateData.description = config.description;
     if (config.category) updateData.category = config.category;
     if (config.systemPrompt) updateData.system_prompt = config.systemPrompt;
+    if (config.model_id) updateData.model_id = config.model_id;
     if (config.visibility) updateData.visibility = config.visibility;
     if (config.capabilities) updateData.capabilities = config.capabilities;
     if (pfpUrl) updateData.pfp_url = pfpUrl;

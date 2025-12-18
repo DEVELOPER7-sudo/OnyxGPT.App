@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { botService } from '@/services/botService';
-import { BotConfig } from '@/types/chat';
+import { BotConfig, Bot } from '@/types/chat';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,7 +19,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import MotionBackground from '@/components/MotionBackground';
-import { Loader2, ArrowLeft, Upload } from 'lucide-react';
+import { Loader2, ArrowLeft, Upload, Trash2 } from 'lucide-react';
+import { generateRandomUsername } from '@/lib/username-generator';
+import { useTheme } from '@/hooks/useTheme';
 
 const CATEGORIES = [
   'general',
@@ -31,18 +33,35 @@ const CATEGORIES = [
   'business',
 ];
 
+const MODELS = [
+  { id: 'gpt-5', name: 'GPT-5' },
+  { id: 'gpt-4o', name: 'GPT-4o' },
+  { id: 'claude-sonnet', name: 'Claude Sonnet 4.5' },
+  { id: 'gemini-2-5-pro', name: 'Gemini 2.5 Pro' },
+  { id: 'deepseek-r1', name: 'DeepSeek R1' },
+  { id: 'grok-3', name: 'Grok 3' },
+];
+
 const BotCreator = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { uuid } = useParams<{ uuid?: string }>();
+  const { user, signOut, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loadingBot, setLoadingBot] = useState(!!uuid);
   const [pfpFile, setPfpFile] = useState<File | null>(null);
   const [pfpPreview, setPfpPreview] = useState<string>('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [existingBot, setExistingBot] = useState<Bot | null>(null);
+
+  // Apply main app theme from user settings
+  useTheme();
 
   const [formData, setFormData] = useState<BotConfig>({
     name: '',
     description: '',
     category: 'general',
     systemPrompt: '',
+    model_id: 'gpt-5',
     visibility: 'private',
     capabilities: {
       memory: false,
@@ -50,6 +69,49 @@ const BotCreator = () => {
       tools: [],
     },
   });
+
+  // Load existing bot if editing
+  useEffect(() => {
+    if (uuid) {
+      const loadBot = async () => {
+        try {
+          const bot = await botService.fetchBotByUuid(uuid, user?.id);
+          if (!bot || bot.creator_id !== user?.id) {
+            toast.error('You do not have permission to edit this bot');
+            navigate('/bots');
+            return;
+          }
+          setExistingBot(bot);
+          setIsEditing(true);
+          setFormData({
+            name: bot.name,
+            description: bot.description || '',
+            category: bot.category || 'general',
+            systemPrompt: bot.system_prompt,
+            model_id: bot.model_id,
+            visibility: bot.visibility,
+            capabilities: bot.capabilities,
+            pfpUrl: bot.pfp_url,
+          });
+          setPfpPreview(bot.pfp_url || '');
+          setLoadingBot(false);
+        } catch (error) {
+          console.error('Error loading bot:', error);
+          toast.error('Failed to load bot');
+          navigate('/bots');
+        }
+      };
+      loadBot();
+    }
+  }, [uuid, user?.id, navigate]);
+
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.error('You must be logged in to create a bot');
+      navigate('/bots');
+    }
+  }, [user, authLoading, navigate]);
 
   const handlePfpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,16 +146,65 @@ const BotCreator = () => {
     setLoading(true);
 
     try {
-      const bot = await botService.createBot(formData, user.id, pfpFile || undefined);
-      toast.success('Bot created successfully');
+      let bot;
+      
+      if (isEditing && existingBot) {
+        // Update existing bot
+        bot = await botService.updateBot(
+          existingBot.uuid,
+          formData,
+          user.id,
+          pfpFile || undefined
+        );
+        toast.success('Bot updated successfully');
+      } else {
+        // Create new bot
+        const creatorUsername = generateRandomUsername();
+        bot = await botService.createBot(
+          formData,
+          user.id,
+          creatorUsername,
+          pfpFile || undefined
+        );
+        toast.success('Bot created successfully');
+      }
+      
       navigate(`/bot/${bot.uuid}`);
     } catch (error) {
-      console.error('Error creating bot:', error);
-      toast.error('Failed to create bot');
+      console.error('Error saving bot:', error);
+      toast.error(isEditing ? 'Failed to update bot' : 'Failed to create bot');
     } finally {
       setLoading(false);
     }
   };
+
+  const handleDeleteBot = async () => {
+    if (!existingBot || !user?.id) return;
+    
+    if (!window.confirm('Are you sure you want to delete this bot? This action cannot be undone.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await botService.deleteBot(existingBot.uuid, user.id);
+      toast.success('Bot deleted successfully');
+      navigate('/bots');
+    } catch (error) {
+      console.error('Error deleting bot:', error);
+      toast.error('Failed to delete bot');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loadingBot) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background overflow-hidden">
@@ -114,9 +225,14 @@ const BotCreator = () => {
               <ArrowLeft className="w-4 h-4" />
               Back to Gallery
             </Button>
-            <h1 className="text-3xl font-bold mb-2">Create a New Bot</h1>
+            <h1 className="text-3xl font-bold mb-2">
+              {isEditing ? 'Edit Bot' : 'Create a New Bot'}
+            </h1>
             <p className="text-muted-foreground">
-              Build a custom AI bot with your own system prompt and capabilities
+              {isEditing 
+                ? 'Update your bot\'s configuration and behavior'
+                : 'Build a custom AI bot with your own system prompt and capabilities'
+              }
             </p>
           </div>
 
@@ -195,7 +311,7 @@ const BotCreator = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="category">Category</Label>
                     <Select
@@ -211,6 +327,27 @@ const BotCreator = () => {
                         {CATEGORIES.map((cat) => (
                           <SelectItem key={cat} value={cat}>
                             {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="model">Model *</Label>
+                    <Select
+                      value={formData.model_id}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, model_id: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MODELS.map((model) => (
+                          <SelectItem key={model.id} value={model.id}>
+                            {model.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -334,10 +471,10 @@ const BotCreator = () => {
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Creating...
+                    {isEditing ? 'Updating...' : 'Creating...'}
                   </>
                 ) : (
-                  'Create Bot'
+                  isEditing ? 'Update Bot' : 'Create Bot'
                 )}
               </Button>
               <Button
@@ -347,6 +484,18 @@ const BotCreator = () => {
               >
                 Cancel
               </Button>
+              {isEditing && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={loading}
+                  onClick={handleDeleteBot}
+                  className="gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </Button>
+              )}
             </div>
           </form>
         </div>

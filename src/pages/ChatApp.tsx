@@ -32,6 +32,7 @@ const SearchPanel = lazy(() => import('@/components/SearchPanel'));
 const LogCenter = lazy(() => import('@/components/LogCenter'));
 const TriggerGallery = lazy(() => import('@/components/TriggerGallery'));
 const AnalyticsPanel = lazy(() => import('@/components/AnalyticsPanel'));
+const DynamicIslandDisplay = lazy(() => import('@/components/DynamicIslandDisplay'));
 
 const ChatApp = () => {
    const [chats, setChats] = useState<Chat[]>([]);
@@ -1158,6 +1159,12 @@ const ChatApp = () => {
   return (
     <div className="flex flex-col h-screen w-screen bg-background overflow-hidden relative">
       <MotionBackground />
+      
+      {/* Dynamic Island & Always-On Display */}
+      <Suspense fallback={null}>
+        <DynamicIslandDisplay />
+      </Suspense>
+      
       <Header 
         showMenuButton={true}
         onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)}

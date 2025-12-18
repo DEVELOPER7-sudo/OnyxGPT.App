@@ -15,12 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const memorySchema = z.object({
   title: z.string()
     .trim()
-    .min(1, 'Title cannot be empty'),
-  // No max length - unlimited title
-  content: z.string()
-    .trim()
-    .min(1, 'Content cannot be empty')
-    // No max length - unlimited content
+    .min(1, 'Memory cannot be empty')
+    // No max length - unlimited
 });
 
 const PRESET_CATEGORIES = [
@@ -54,8 +50,7 @@ const IMPORTANCE_COLORS = {
 const MemoryEditor = () => {
   const [memories, setMemories] = useState<Memory[]>(storage.getMemories());
   const [filteredMemories, setFilteredMemories] = useState<Memory[]>(memories);
-  const [newTitle, setNewTitle] = useState('');
-  const [newContent, setNewContent] = useState('');
+  const [newMemory, setNewMemory] = useState('');
   const [newCategory, setNewCategory] = useState<string>('Personal');
   const [newOrganization, setNewOrganization] = useState<string>('Personal');
   const [newImportance, setNewImportance] = useState<'low' | 'medium' | 'high'>('medium');
@@ -116,7 +111,7 @@ const MemoryEditor = () => {
   };
 
   const handleAdd = () => {
-    const result = memorySchema.safeParse({ title: newTitle, content: newContent });
+    const result = memorySchema.safeParse({ title: newMemory });
     
     if (!result.success) {
       toast.error(result.error.errors[0].message);
@@ -128,7 +123,6 @@ const MemoryEditor = () => {
     const memory: Memory = {
       id: Date.now().toString(),
       title: result.data.title,
-      content: result.data.content,
       timestamp: Date.now(),
       category: newCategory,
       importance: newImportance,
@@ -140,8 +134,7 @@ const MemoryEditor = () => {
 
     storage.addMemory(memory);
     setMemories([memory, ...memories]);
-    setNewTitle('');
-    setNewContent('');
+    setNewMemory('');
     setNewCategory('Personal');
     setNewOrganization('Personal');
     setNewImportance('medium');
@@ -150,8 +143,8 @@ const MemoryEditor = () => {
     toast.success('Memory added');
   };
 
-  const handleUpdate = (id: string, title: string, content: string, category: string, importance: 'low' | 'medium' | 'high', tags: string[], expiresAt?: number, organization?: string) => {
-    const result = memorySchema.safeParse({ title, content });
+  const handleUpdate = (id: string, title: string, category: string, importance: 'low' | 'medium' | 'high', tags: string[], expiresAt?: number, organization?: string) => {
+    const result = memorySchema.safeParse({ title });
     
     if (!result.success) {
       toast.error(result.error.errors[0].message);
@@ -159,8 +152,7 @@ const MemoryEditor = () => {
     }
 
     storage.updateMemory(id, { 
-      title: result.data.title, 
-      content: result.data.content,
+      title: result.data.title,
       category,
       importance,
       tags: tags.length > 0 ? tags : undefined,
@@ -228,21 +220,12 @@ const MemoryEditor = () => {
               </h2>
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">Title</label>
-                  <Input
-                    placeholder="e.g., 'Favorite Color', 'Job Title'"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">Content</label>
+                  <label className="text-sm text-muted-foreground mb-1 block">Your memory here</label>
                   <Textarea
-                    placeholder="e.g., 'Blue', 'Software Engineer'"
-                    value={newContent}
-                    onChange={(e) => setNewContent(e.target.value)}
-                    rows={3}
+                    placeholder="e.g., 'Blue is my favorite color', 'I work as a Software Engineer'"
+                    value={newMemory}
+                    onChange={(e) => setNewMemory(e.target.value)}
+                    rows={4}
                   />
                 </div>
 
@@ -405,16 +388,11 @@ const MemoryEditor = () => {
                     <Card key={memory.id} className={`p-4 animate-slideUp hover:shadow-lg transition-all ${isExpired ? 'opacity-50' : ''}`}>
                       {editingId === memory.id ? (
                         <div className="space-y-3">
-                          <Input
+                          <Textarea
                             defaultValue={memory.title || memory.key}
                             id={`title-${memory.id}`}
-                            placeholder="Title"
-                          />
-                          <Textarea
-                            defaultValue={memory.content || memory.value}
-                            id={`content-${memory.id}`}
-                            rows={2}
-                            placeholder="Content"
+                            placeholder="Your memory here"
+                            rows={3}
                           />
                           <div className="grid grid-cols-2 gap-2">
                             <Select value={editCategory} onValueChange={setEditCategory}>
@@ -456,11 +434,10 @@ const MemoryEditor = () => {
                           <div className="flex gap-2">
                             <Button
                                 onClick={() => {
-                                  const title = (document.getElementById(`title-${memory.id}`) as HTMLInputElement).value;
-                                  const content = (document.getElementById(`content-${memory.id}`) as HTMLTextAreaElement).value;
+                                  const title = (document.getElementById(`title-${memory.id}`) as HTMLTextAreaElement).value;
                                   const tagsInput = (document.getElementById(`tags-${memory.id}`) as HTMLInputElement).value;
                                   const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
-                                  handleUpdate(memory.id, title, content, editCategory, editImportance, tags, memory.expiresAt, editOrganization);
+                                  handleUpdate(memory.id, title, editCategory, editImportance, tags, memory.expiresAt, editOrganization);
                                 }}
                                className="flex-1"
                              >
@@ -507,7 +484,7 @@ const MemoryEditor = () => {
                             </span>
                           </div>
                           
-                          <p className="text-sm mb-3 whitespace-pre-wrap">{memory.content || memory.value}</p>
+                          <p className="text-sm mb-3 whitespace-pre-wrap text-muted-foreground">{memory.title}</p>
                           
                           {memory.tags && memory.tags.length > 0 && (
                             <div className="flex gap-1 flex-wrap mb-3">

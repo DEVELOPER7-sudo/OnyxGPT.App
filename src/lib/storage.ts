@@ -127,17 +127,16 @@ export const storage = {
   },
 
   saveMemories: (memories: Memory[]) => {
-    // Ensure all memories have both old (key/value) and new (title/content) fields
-    const memoriesWithBothFields = memories.map(m => ({
+    // Keep backend fields (content/value) from existing memories, only update title
+    const memoriesWithBackendFields = memories.map(m => ({
       ...m,
-      // Ensure title/content fields exist
       title: m.title || m.key || '',
-      content: m.content || m.value || '',
-      // Keep old fields for backward compatibility
+      // Preserve content/value for backend API (even if not shown in frontend)
+      content: m.content || m.value || m.title || '',
       key: m.key || m.title || '',
-      value: m.value || m.content || '',
+      value: m.value || m.content || m.title || '',
     }));
-    localStorage.setItem(STORAGE_KEYS.MEMORY, JSON.stringify(memoriesWithBothFields));
+    localStorage.setItem(STORAGE_KEYS.MEMORY, JSON.stringify(memoriesWithBackendFields));
   },
 
   addMemory: (memory: Memory) => {

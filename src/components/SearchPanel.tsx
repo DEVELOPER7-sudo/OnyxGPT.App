@@ -31,11 +31,7 @@ const SearchPanel = ({ onSelectChat }: SearchPanelProps) => {
 
     const memoryResults = memories.filter(mem => {
       const title = mem.title || mem.key || '';
-      const content = mem.content || mem.value || '';
-      return (
-        title.toLowerCase().includes(query) ||
-        content.toLowerCase().includes(query)
-      );
+      return title.toLowerCase().includes(query);
     });
 
     return { chatResults, imageResults, memoryResults };
@@ -134,8 +130,7 @@ const SearchPanel = ({ onSelectChat }: SearchPanelProps) => {
               ) : (
                 searchResults.memoryResults.map((memory) => (
                    <Card key={memory.id} className="p-4 animate-slideUp hover:shadow-lg transition-all">
-                     <h3 className="font-semibold text-sm badge-blue mb-2">{memory.title || memory.key}</h3>
-                     <p className="text-sm">{memory.content || memory.value}</p>
+                     <p className="text-sm text-muted-foreground">{memory.title || memory.key}</p>
                    </Card>
                  ))
               )}

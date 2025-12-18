@@ -103,7 +103,7 @@ export const generateMemoryDetailsSentence = (): MemoryDetailsSentence => {
   if (recentlyAdded.length > 0) {
     const recentLabels = recentlyAdded
       .slice(0, 3)
-      .map(m => `${m.key} (${m.importance || 'medium'})`)
+      .map(m => `${m.title} (${m.importance || 'medium'})`)
       .join(', ');
     parts.push(`. Recently added: ${recentLabels}`);
   }
@@ -166,7 +166,7 @@ ${memoryDetails.sentence}
 
 Memory Categories: ${memoryDetails.categories.join(', ')}
 High Priority Items: ${memoryDetails.metadata.highImportanceMemories
-    .map(m => m.key)
+    .map(m => m.title)
     .join(', ') || 'None'}`;
 };
 
@@ -231,7 +231,7 @@ export const buildSystemPromptWithMemoryContext = (
     if (selectedMemories.length > 0) {
       systemPromptParts.push('[SELECTED USER MEMORIES FOR CONTEXT]');
       selectedMemories.forEach(mem => {
-        systemPromptParts.push(`- ${mem.key}: ${mem.value} (${mem.importance || 'medium'} priority)`);
+        systemPromptParts.push(`- ${mem.title} (${mem.importance || 'medium'} priority)`);
       });
       systemPromptParts.push('');
     }
@@ -254,7 +254,7 @@ export const buildSystemPromptWithMemoryContext = (
 
     if (uniqueMemories.length > 0) {
       uniqueMemories.forEach(mem => {
-        systemPromptParts.push(`- ${mem.key}: ${mem.value}`);
+        systemPromptParts.push(`- ${mem.title}`);
       });
     }
     systemPromptParts.push('');
@@ -299,7 +299,7 @@ export const buildMemoryContextPayload = (
 ): {
   memoryCount: number;
   memoryDetails: string;
-  selectedMemories: Array<{ id: string; key: string; value: string; importance?: string }>;
+  selectedMemories: Array<{ id: string; title: string; importance?: string }>;
   memoryMetadata: MemoryContextMetadata;
 } => {
   const memoryDetails = generateMemoryDetailsSentence();
@@ -315,8 +315,7 @@ export const buildMemoryContextPayload = (
     memoryDetails: memoryDetails.sentence,
     selectedMemories: selectedMemories.map(m => ({
       id: m.id,
-      key: m.key,
-      value: m.value,
+      title: m.title,
       importance: m.importance,
     })),
     memoryMetadata: memoryDetails.metadata,
@@ -346,8 +345,8 @@ export const shouldIncludeMemoryContext = (
 export const suggestMemoryFromResponse = (
   response: string,
   trigger: DetectedTrigger
-): Array<{ key: string; value: string; category: string; importance: 'low' | 'medium' | 'high' }> => {
-  const suggestions: Array<{ key: string; value: string; category: string; importance: 'low' | 'medium' | 'high' }> = [];
+): Array<{ title: string; category: string; importance: 'low' | 'medium' | 'high' }> => {
+  const suggestions: Array<{ title: string; category: string; importance: 'low' | 'medium' | 'high' }> = [];
 
   // This is a basic implementation
   // In production, you'd use NLP to extract meaningful facts
@@ -376,12 +375,12 @@ export const formatMemoryContextForDebug = (): string => {
   lines.push('');
   lines.push('Recently Added:');
   memoryDetails.metadata.recentlyAdded.forEach(mem => {
-    lines.push(`  - ${mem.key}: ${mem.value.substring(0, 50)}...`);
+    lines.push(`  - ${mem.title.substring(0, 50)}...`);
   });
   lines.push('');
   lines.push('High Importance Items:');
   memoryDetails.metadata.highImportanceMemories.forEach(mem => {
-    lines.push(`  - ${mem.key}: ${mem.value.substring(0, 50)}...`);
+    lines.push(`  - ${mem.title.substring(0, 50)}...`);
   });
   lines.push('=== END DEBUG INFO ===');
 

@@ -1645,7 +1645,7 @@ export const detectTriggersAndBuildPrompt = (userMessage: string): {
 export const buildEnhancedSystemPromptWithMemory = (
   detectedTriggers: DetectedTrigger[],
   memoryContext?: string,
-  selectedMemoryForContext?: Array<{ key: string; value: string }>,
+  selectedMemoryForContext?: Array<{ title: string }>,
 ): string => {
   const sections: string[] = [];
 
@@ -1666,7 +1666,7 @@ export const buildEnhancedSystemPromptWithMemory = (
   if (selectedMemoryForContext && selectedMemoryForContext.length > 0) {
     sections.push('Selected Memory Context\n');
     selectedMemoryForContext.forEach(mem => {
-      sections.push(`${mem.key} ${mem.value}`);
+      sections.push(`${mem.title}`);
     });
     sections.push('');
   }

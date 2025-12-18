@@ -30,7 +30,7 @@ const SearchPanel = ({ onSelectChat }: SearchPanelProps) => {
     );
 
     const memoryResults = memories.filter(mem => {
-      const title = mem.title || mem.key || '';
+      const title = mem.title || '';
       return title.toLowerCase().includes(query);
     });
 
@@ -130,7 +130,7 @@ const SearchPanel = ({ onSelectChat }: SearchPanelProps) => {
               ) : (
                 searchResults.memoryResults.map((memory) => (
                    <Card key={memory.id} className="p-4 animate-slideUp hover:shadow-lg transition-all">
-                     <p className="text-sm text-muted-foreground">{memory.title || memory.key}</p>
+                     <p className="text-sm text-muted-foreground">{memory.title}</p>
                    </Card>
                  ))
               )}

@@ -353,7 +353,7 @@ PROCEED IMMEDIATELY. EXECUTE TRIGGER "${trigger.trigger}".`;
 export const generateMemoryAwareSystemPrompt = (
   trigger: Trigger,
   memoryVariablesSentence: string,
-  selectedMemories?: Array<{ key: string; value: string; importance?: string }>
+  selectedMemories?: Array<{ title: string; importance?: string }>
 ): string => {
   let prompt = generateBackendSafeSystemPrompt(trigger);
   
@@ -366,7 +366,7 @@ export const generateMemoryAwareSystemPrompt = (
     prompt += `\n[MEMORY CONTEXT]\n`;
     selectedMemories.forEach(mem => {
       const importance = mem.importance ? ` (${mem.importance} importance)` : '';
-      prompt += `- ${mem.key}: ${mem.value}${importance}\n`;
+      prompt += `- ${mem.title}${importance}\n`;
     });
   }
   
@@ -400,7 +400,7 @@ ${memoryContext ? `Memory Context: ${memoryContext}` : ''}`;
 export const buildCompleteEnhancedSystemPrompt = (
   triggers: Trigger[],
   memoryContext?: string,
-  selectedMemories?: Array<{ key: string; value: string; importance?: string }>
+  selectedMemories?: Array<{ title: string; importance?: string }>
 ): string => {
   if (triggers.length === 0) {
     return '';
@@ -428,7 +428,7 @@ export const buildCompleteEnhancedSystemPrompt = (
     systemPrompts.push('## RELEVANT MEMORIES');
     selectedMemories.forEach(mem => {
       const importance = mem.importance ? ` [${mem.importance.toUpperCase()}]` : '';
-      systemPrompts.push(`- **${mem.key}**${importance}: ${mem.value}`);
+      systemPrompts.push(`- ${mem.title}${importance}`);
     });
     systemPrompts.push('');
   }

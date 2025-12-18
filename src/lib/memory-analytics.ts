@@ -52,7 +52,7 @@ export const calculateMemoryAnalytics = (): MemoryAnalytics => {
   }
 
   // Basic statistics
-  const totalCharacters = memories.reduce((sum, m) => sum + m.value.length, 0);
+  const totalCharacters = memories.reduce((sum, m) => sum + m.title.length, 0);
   const averageMemorySize = totalCharacters / memories.length;
 
   // Sort by timestamp
@@ -80,7 +80,7 @@ export const calculateMemoryAnalytics = (): MemoryAnalytics => {
 
   // Top memories (by size)
   const topMemories = [...memories]
-    .sort((a, b) => b.value.length - a.value.length)
+    .sort((a, b) => b.title.length - a.title.length)
     .slice(0, 5);
 
   // Dormant memories (not accessed recently)
@@ -174,7 +174,7 @@ const generateMemoryInsights = (
   const insights: MemoryInsight[] = [];
 
   // Storage size insight
-  const totalSize = memories.reduce((sum, m) => sum + m.value.length, 0);
+  const totalSize = memories.reduce((sum, m) => sum + m.title.length, 0);
   if (totalSize > 1000000) { // > 1MB
     insights.push({
       title: 'Large Memory Store',
@@ -224,7 +224,7 @@ const generateMemoryInsights = (
   }
 
   // Memory growth
-  const avgSize = memories.reduce((sum, m) => sum + m.value.length, 0) / memories.length;
+  const avgSize = memories.reduce((sum, m) => sum + m.title.length, 0) / memories.length;
   if (avgSize < 50) {
     insights.push({
       title: 'Short Memory Entries',
@@ -265,7 +265,7 @@ export const getMemoryTimeline = (
       timelineMap[date] = { count: 0, totalChars: 0 };
     }
     timelineMap[date].count++;
-    timelineMap[date].totalChars += m.value.length;
+    timelineMap[date].totalChars += m.title.length;
   });
 
   return Object.entries(timelineMap)
@@ -319,7 +319,7 @@ export const getMemoryQualityScore = (): {
 
   // Completeness (20 points)
   const avgLength = memories.length > 0
-    ? memories.reduce((sum, m) => sum + m.value.length, 0) / memories.length
+    ? memories.reduce((sum, m) => sum + m.title.length, 0) / memories.length
     : 0;
   if (avgLength > 200) score += 20;
   else if (avgLength > 100) score += 15;

@@ -389,7 +389,7 @@ const MemoryEditor = () => {
                       {editingId === memory.id ? (
                         <div className="space-y-3">
                           <Textarea
-                            defaultValue={memory.title || memory.key}
+                            defaultValue={memory.title}
                             id={`title-${memory.id}`}
                             placeholder="Your memory here"
                             rows={3}
@@ -457,7 +457,7 @@ const MemoryEditor = () => {
                         <>
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-semibold">{memory.title || memory.key}</h3>
+                              <h3 className="font-semibold">{memory.title}</h3>
                               {memory.category && (
                                 <Badge variant="outline" className="text-xs">
                                   {memory.category}

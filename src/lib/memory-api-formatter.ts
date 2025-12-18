@@ -28,10 +28,8 @@ export interface MemoryEntry {
 
 // Simple format for mindstore API parameter
 export interface SimplifiedMemory {
-  title: string;
-  category?: string;
-  importance?: string;
-  organization?: string;
+  key: string;
+  value: string;
 }
 
 /**
@@ -54,25 +52,21 @@ export const formatMemoryEntry = (memory: Memory): MemoryEntry => {
 
 /**
  * Create simplified memory format for mindstore API parameter
- * Only sends title and content - CRITICAL for API to work
+ * Converts title to key/value format for Puter mindstore API compatibility
  */
 export const formatMemoriesForMindstore = (memories: Memory[]): SimplifiedMemory[] => {
   const now = Date.now();
   return memories
     .filter(m => !m.expiresAt || m.expiresAt > now) // Only active memories
     .map(m => {
-      const title = m.title || m.key || '';
-      const content = m.content || m.value || '';
+      const title = m.title || '';
       
       return {
-        title,
-        content,
-        category: m.category,
-        importance: m.importance,
-        organization: m.organization,
+        key: title,
+        value: title, // Use title as both key and value
       };
     })
-    .filter(m => m.title && m.content); // Ensure both fields exist
+    .filter(m => m.key); // Ensure key exists
 };
 
 /**
@@ -128,9 +122,9 @@ export const isValidUserMemory = (memory: Memory): boolean => {
     /demo account/i,
   ];
 
-  const text = `${memory.title || memory.key} ${memory.content || memory.value}`.toLowerCase();
+  const text = `${memory.title || ''}`.toLowerCase();
 
-  // If key or value matches prebuilt patterns, it's not a valid user memory
+  // If title matches prebuilt patterns, it's not a valid user memory
   const hasPrebuiltContent = prebuiltPatterns.some(pattern => pattern.test(text));
 
   // Also check if it's auto-extracted (may want to filter these)
@@ -204,9 +198,8 @@ export const buildCleanMemorySystemPrompt = (memories: Memory[]): string => {
   if (highImportance.length > 0) {
     lines.push('[IMPORTANT NOTES]');
     highImportance.slice(0, 5).forEach(m => {
-      const title = m.title || m.key;
-      const content = m.content || m.value;
-      lines.push(`- ${title}: ${content}`);
+      const title = m.title || '';
+      lines.push(`- ${title}`);
     });
     lines.push('');
   }

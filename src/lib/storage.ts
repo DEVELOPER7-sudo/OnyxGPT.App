@@ -132,11 +132,9 @@ export const storage = {
     const memories = storage.getMemories();
     const lowerQuery = query.toLowerCase();
     return memories.filter(m => {
-      const title = m.title || m.key || '';
-      const content = m.content || m.value || '';
+      const title = m.title || '';
       return (
-        title.toLowerCase().includes(lowerQuery) || 
-        content.toLowerCase().includes(lowerQuery) ||
+        title.toLowerCase().includes(lowerQuery) ||
         m.category?.toLowerCase().includes(lowerQuery) ||
         m.tags?.some(tag => tag.toLowerCase().includes(lowerQuery))
       );

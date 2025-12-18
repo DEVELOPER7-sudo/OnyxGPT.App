@@ -13,6 +13,7 @@ import { useChatPersistence } from '@/hooks/useChatPersistence';
 import { useAuth } from '@/hooks/useAuth';
 import { useChatSync } from '@/hooks/useChatSync';
 import { useAnalytics } from '@/hooks/useFeatures';
+import { useDailyPushNotifications } from '@/hooks/useDailyPushNotifications';
 import MotionBackground from '@/components/MotionBackground';
 import { createPuterAPILogger, createOpenRouterAPILogger } from '@/lib/api-logger';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,7 +32,6 @@ const SearchPanel = lazy(() => import('@/components/SearchPanel'));
 const LogCenter = lazy(() => import('@/components/LogCenter'));
 const TriggerGallery = lazy(() => import('@/components/TriggerGallery'));
 const AnalyticsPanel = lazy(() => import('@/components/AnalyticsPanel'));
-const DailyNotificationBanner = lazy(() => import('@/components/DailyNotificationBanner'));
 
 const ChatApp = () => {
    const [chats, setChats] = useState<Chat[]>([]);
@@ -45,9 +45,8 @@ const ChatApp = () => {
    const [deepSearchEnabled, setDeepSearchEnabled] = useState(settings.enableDeepSearch);
    const [taskMode, setTaskMode] = useState<'standard' | 'reasoning' | 'research' | 'creative'>(settings.taskMode || 'standard');
    const [abortController, setAbortController] = useState<AbortController | null>(null);
-   const [showNotification, setShowNotification] = useState(true);
-   
-   const { user, signOut, loading: authLoading } = useAuth();
+    
+    const { user, signOut, loading: authLoading } = useAuth();
    const { playMessageComplete, playError } = useSoundEffects();
    const { recordStats } = useAnalytics();
 
@@ -59,6 +58,9 @@ const ChatApp = () => {
   
   // Sync chats to cloud if user is signed in
   useChatSync(chats, user?.id, setChats);
+
+  // Send daily push notifications to device
+  useDailyPushNotifications();
 
   useEffect(() => {
     try {
@@ -1156,14 +1158,6 @@ const ChatApp = () => {
   return (
     <div className="flex flex-col h-screen w-screen bg-background overflow-hidden relative">
       <MotionBackground />
-      
-      {/* Daily Notification Banner */}
-      {showNotification && (
-        <Suspense fallback={null}>
-          <DailyNotificationBanner onClose={() => setShowNotification(false)} />
-        </Suspense>
-      )}
-      
       <Header 
         showMenuButton={true}
         onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)}

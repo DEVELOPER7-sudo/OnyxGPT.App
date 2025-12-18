@@ -1,5 +1,5 @@
-// Daily notification system for app promotion and engagement
-// Generates AI-written, clickbait-style notifications
+// Device push notification system for app promotion and engagement
+// Generates AI-written, clickbait-style notifications sent directly to user's device
 
 interface DailyNotification {
   id: string;
@@ -175,12 +175,54 @@ const DAILY_NOTIFICATIONS: Record<string, DailyNotification[]> = {
   ]
 };
 
-export const getDailyNotification = (): DailyNotification | null => {
+/**
+ * Send push notification to user's device
+ * Requires user permission (already handled by browser)
+ */
+export const sendPushNotification = async (notification: DailyNotification): Promise<void> => {
+  // Check if browser supports notifications
+  if (!('Notification' in window)) {
+    console.log('Browser does not support notifications');
+    return;
+  }
+
+  // Check if permission is already granted
+  if (Notification.permission === 'granted') {
+    // Send the notification
+    new Notification(notification.title, {
+      body: notification.message,
+      icon: '/onyx-logo.png',
+      badge: '/onyx-logo.png',
+      tag: `notification-${notification.id}`,
+      requireInteraction: false,
+      silent: false,
+    });
+  } else if (Notification.permission !== 'denied') {
+    // Request permission first
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      new Notification(notification.title, {
+        body: notification.message,
+        icon: '/onyx-logo.png',
+        badge: '/onyx-logo.png',
+        tag: `notification-${notification.id}`,
+        requireInteraction: false,
+        silent: false,
+      });
+    }
+  }
+};
+
+/**
+ * Get daily notification and send as push
+ * Sends push notification directly to device, not in-app
+ */
+export const getDailyNotification = async (): Promise<DailyNotification | null> => {
   // Get stored notification date
   const stored = localStorage.getItem('daily_notification_date');
   const today = new Date().toDateString();
   
-  // If notification was already shown today, return null
+  // If notification was already sent today, return null
   if (stored === today) {
     return null;
   }
@@ -189,15 +231,23 @@ export const getDailyNotification = (): DailyNotification | null => {
   const allNotifications = Object.values(DAILY_NOTIFICATIONS).flat();
   const randomNotification = allNotifications[Math.floor(Math.random() * allNotifications.length)];
   
-  // Store that we showed notification today
+  // Store that we sent notification today
   localStorage.setItem('daily_notification_date', today);
   localStorage.setItem('last_notification_id', randomNotification.id);
   
-  // Update the date to today
-  return {
+  // Send as device push notification
+  const notifToSend = {
     ...randomNotification,
     date: today,
   };
+  
+  try {
+    await sendPushNotification(notifToSend);
+  } catch (error) {
+    console.error('Error sending push notification:', error);
+  }
+  
+  return notifToSend;
 };
 
 export const generateCustomNotification = (userActivity?: {

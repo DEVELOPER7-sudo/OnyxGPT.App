@@ -207,45 +207,25 @@ const SettingsPanel = ({
                      className="h-8 text-sm"
                    />
                  </div>
-                 {filteredModels.filter((model: any) => !model.isCustom && model.id.includes('venice')).length > 0 && (
-                   <>
-                     <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">🐬 Uncensored Model (OpenRouter)</div>
-                     {filteredModels.filter((model: any) => !model.isCustom && model.id.includes('venice')).map((model: any) => (
-                       <SelectItem key={model.id} value={model.id}>
-                         {model.name}
-                       </SelectItem>
-                     ))}
-                   </>
+                 {filteredModels.filter((model: any) => !model.isCustom).length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">⭐ Flagship Models</div>
+                      {filteredModels.filter((model: any) => !model.isCustom).map((model: any) => (
+                        <SelectItem key={model.id} value={model.id}>
+                          {model.name} ({model.provider})
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                 {filteredModels.length === 0 && (
+                   <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+                     No models found
+                   </div>
                  )}
-                {filteredModels.filter((model: any) => !model.isCustom && !model.id.includes('venice') && (model.id.includes('gpt-5') || model.id.includes('claude-sonnet-4.5') || model.id.includes('gemini-2.5-pro') || model.id.includes('deepseek-r1') || model.id.includes('grok-3') || model.id.includes('llama-4') || model.id.includes('qwen3-max') || model.id.includes('sonar-pro'))).length > 0 && (
-                  <>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">⚡ Featured Models (Puter JS)</div>
-                    {filteredModels.filter((model: any) => !model.isCustom && !model.id.includes('venice') && (model.id.includes('gpt-5') || model.id.includes('claude-sonnet-4.5') || model.id.includes('gemini-2.5-pro') || model.id.includes('deepseek-r1') || model.id.includes('grok-3') || model.id.includes('llama-4') || model.id.includes('qwen3-max') || model.id.includes('sonar-pro'))).map((model: any) => (
-                      <SelectItem key={model.id} value={model.id}>
-                        {model.name} ({model.provider})
-                      </SelectItem>
-                    ))}
-                  </>
-                )}
-                {filteredModels.filter((model: any) => !model.isCustom && !model.id.includes('venice') && !model.id.includes('gpt-5') && !model.id.includes('claude-sonnet-4.5') && !model.id.includes('gemini-2.5-pro') && !model.id.includes('deepseek-r1') && !model.id.includes('grok-3') && !model.id.includes('llama-4') && !model.id.includes('qwen3-max') && !model.id.includes('sonar-pro')).length > 0 && (
-                  <>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">🚀 Other Models (Puter JS)</div>
-                    {filteredModels.filter((model: any) => !model.isCustom && !model.id.includes('venice') && !model.id.includes('gpt-5') && !model.id.includes('claude-sonnet-4.5') && !model.id.includes('gemini-2.5-pro') && !model.id.includes('deepseek-r1') && !model.id.includes('grok-3') && !model.id.includes('llama-4') && !model.id.includes('qwen3-max') && !model.id.includes('sonar-pro')).map((model: any) => (
-                      <SelectItem key={model.id} value={model.id}>
-                        {model.name} ({model.provider})
-                      </SelectItem>
-                    ))}
-                  </>
-                )}
-                {filteredModels.length === 0 && (
-                  <div className="px-2 py-4 text-sm text-muted-foreground text-center">
-                    No models found
-                  </div>
-                )}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              🐬 Venice model uses OpenRouter (requires API key). All others use Puter JS.
+              ⭐ Flagship models optimized for quality and performance.
             </p>
           </div>
 

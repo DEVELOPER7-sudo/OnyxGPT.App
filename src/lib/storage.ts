@@ -168,7 +168,7 @@ export const storage = {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       return data ? JSON.parse(data) : {
-        textModel: 'gpt-5-nano',
+        textModel: 'openrouter:kwaipilot/kat-coder-pro:free',
         imageModel: 'flux',
         temperature: 0.7,
         maxTokens: 100000, // Increased to 100k tokens
@@ -187,7 +187,7 @@ export const storage = {
     } catch (error) {
       console.error('Error loading settings:', error);
       return {
-        textModel: 'gpt-5-nano',
+        textModel: 'openrouter:kwaipilot/kat-coder-pro:free',
         imageModel: 'flux',
         temperature: 0.7,
         maxTokens: 100000, // Increased to 100k tokens

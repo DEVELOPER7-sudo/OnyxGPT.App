@@ -21,7 +21,7 @@ import { detectTriggersAndBuildPrompt, parseTriggeredResponse, getAllTriggers, d
 import { chatMessageSchema } from '@/lib/validation';
 import { generateEnhancedSystemPrompt, TRIGGER_TAG_ENFORCEMENT_PREFIX } from '@/lib/enhanced-system-prompts';
 import { generateWebSearchSystemPrompt } from '@/lib/websearch-formatter';
-import { buildSystemPromptWithMemoryContext } from '@/lib/memory-context-integration';
+import { buildSystemPromptWithMemoryContext, buildMemoryContextPayload } from '@/lib/memory-context-integration';
 
 // Lazy load heavy components
 const SettingsPanel = lazy(() => import('@/components/SettingsPanel'));
@@ -31,6 +31,7 @@ const SearchPanel = lazy(() => import('@/components/SearchPanel'));
 const LogCenter = lazy(() => import('@/components/LogCenter'));
 const TriggerGallery = lazy(() => import('@/components/TriggerGallery'));
 const AnalyticsPanel = lazy(() => import('@/components/AnalyticsPanel'));
+const DailyNotificationBanner = lazy(() => import('@/components/DailyNotificationBanner'));
 
 const ChatApp = () => {
    const [chats, setChats] = useState<Chat[]>([]);
@@ -44,6 +45,7 @@ const ChatApp = () => {
    const [deepSearchEnabled, setDeepSearchEnabled] = useState(settings.enableDeepSearch);
    const [taskMode, setTaskMode] = useState<'standard' | 'reasoning' | 'research' | 'creative'>(settings.taskMode || 'standard');
    const [abortController, setAbortController] = useState<AbortController | null>(null);
+   const [showNotification, setShowNotification] = useState(true);
    
    const { user, signOut, loading: authLoading } = useAuth();
    const { playMessageComplete, playError } = useSoundEffects();
@@ -684,10 +686,15 @@ const ChatApp = () => {
     setAbortController(controller);
 
     const logger = createOpenRouterAPILogger();
+    
+    // Build memory context payload
+    const memoryContextPayload = buildMemoryContextPayload();
+    
     const apiParams = {
       messages: formattedMessages,
       temperature: settings.temperature,
       max_tokens: settings.maxTokens,
+      mindstore: memoryContextPayload,
     };
 
     try {
@@ -705,6 +712,7 @@ const ChatApp = () => {
           model: modelId,
           temperature: settings.temperature,
           max_tokens: settings.maxTokens,
+          mindstore: memoryContextPayload,
           // SECURITY: Custom API keys should be stored server-side in Supabase secrets
           // For now, removed to prevent client-side exposure
         }),
@@ -1148,6 +1156,14 @@ const ChatApp = () => {
   return (
     <div className="flex flex-col h-screen w-screen bg-background overflow-hidden relative">
       <MotionBackground />
+      
+      {/* Daily Notification Banner */}
+      {showNotification && (
+        <Suspense fallback={null}>
+          <DailyNotificationBanner onClose={() => setShowNotification(false)} />
+        </Suspense>
+      )}
+      
       <Header 
         showMenuButton={true}
         onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)}

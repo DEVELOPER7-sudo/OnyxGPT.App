@@ -2,21 +2,12 @@ import { beautifyModelName, getProviderFromModelId, getCustomModels } from './mo
 import { ALL_OPENROUTER_MODELS } from './all-models';
 
 export const TEXT_MODELS = [
-  // Featured Models (Puter JS endpoint with OpenRouter prefix)
+  // Flagship Models Only (Puter JS endpoint with OpenRouter prefix)
+  { id: 'openrouter:kwaipilot/kat-coder-pro:free', name: 'KAI Coder Pro (Free)', provider: 'Kwaipilot' },
   { id: 'openrouter:openai/gpt-5', name: 'GPT-5', provider: 'OpenAI' },
   { id: 'openrouter:anthropic/claude-sonnet-4.5', name: 'Claude Sonnet 4.5', provider: 'Anthropic' },
   { id: 'openrouter:google/gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google' },
-  { id: 'openrouter:deepseek/deepseek-r1', name: 'DeepSeek R1', provider: 'DeepSeek' },
-  { id: 'openrouter:xai/grok-3', name: 'Grok 3', provider: 'xAI' },
-  { id: 'openrouter:meta/llama-4-maverick', name: 'Llama 4 Maverick', provider: 'Meta' },
-  { id: 'openrouter:qwen/qwen3-max', name: 'Qwen 3 Max', provider: 'Qwen' },
-  { id: 'openrouter:perplexity/sonar-pro', name: 'Sonar Pro', provider: 'Perplexity' },
-  
-  // Fast & Efficient (Puter JS endpoint with OpenRouter prefix)
-  { id: 'openrouter:openai/gpt-5-mini', name: 'GPT-5 Mini', provider: 'OpenAI' },
   { id: 'openrouter:openai/gpt-5-nano', name: 'GPT-5 Nano', provider: 'OpenAI' },
-  { id: 'openrouter:google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'Google' },
-  { id: 'openrouter:anthropic/claude-3.5-haiku', name: 'Claude 3.5 Haiku', provider: 'Anthropic' },
 ];
 
 /**

@@ -19,6 +19,15 @@ import {
  } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Chat } from '@/types/chat';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ChatSidebarProps {
   chats: Chat[];
@@ -42,6 +51,8 @@ const ChatSidebar = ({
   onToggleCollapse,
 }: ChatSidebarProps) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [chatToDelete, setChatToDelete] = useState<string | null>(null);
 
   const filteredChats = chats.filter(chat => {
     const title = typeof chat.title === 'string' ? chat.title : 'Untitled Chat';
@@ -113,7 +124,8 @@ const ChatSidebar = ({
                     className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDeleteChat(chat.id);
+                      setChatToDelete(chat.id);
+                      setDeleteConfirmOpen(true);
                     }}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -182,6 +194,33 @@ const ChatSidebar = ({
           {!collapsed && <span className="ml-2">Settings</span>}
         </Button>
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Chat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you really sure you want to delete this chat? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-2">
+            <AlertDialogCancel className="flex-1">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (chatToDelete) {
+                  onDeleteChat(chatToDelete);
+                  setChatToDelete(null);
+                  setDeleteConfirmOpen(false);
+                }
+              }}
+              className="flex-1 bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+        </AlertDialog>
         </div>
         );
         };

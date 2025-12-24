@@ -274,8 +274,7 @@ export const factsToMemories = (
 ): Memory[] => {
   return facts.map((fact, index) => ({
     id: `extracted_${Date.now()}_${index}`,
-    key: truncateText(fact.text, 50),
-    value: fact.text,
+    title: truncateText(fact.text, 100),
     category: fact.category || 'Auto-Extracted',
     importance: fact.importance,
     timestamp: Date.now(),

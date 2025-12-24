@@ -262,12 +262,15 @@ export const compressExportedData = async (data: ExportData): Promise<Blob> => {
     writer.close();
 
     const reader = stream.readable.getReader();
-    const chunks: Uint8Array[] = [];
+    const chunks: ArrayBuffer[] = [];
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      chunks.push(value);
+      if (value) {
+        // Convert Uint8Array to ArrayBuffer
+        chunks.push(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
+      }
     }
 
     return new Blob(chunks, { type: 'application/gzip' });

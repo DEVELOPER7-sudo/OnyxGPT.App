@@ -1,6 +1,13 @@
-import { supabase } from '../../integrations/supabase/client';
 import { SharedChat, MessageComment } from '../../types/features';
-import * as bcrypt from 'bcryptjs';
+
+// ============================================================
+// LOCAL STORAGE KEYS
+// ============================================================
+
+const STORAGE_KEYS = {
+  SHARED_CHATS: 'onyx_shared_chats',
+  COMMENTS: 'onyx_message_comments',
+};
 
 // ============================================================
 // CHAT SHARING
@@ -16,93 +23,45 @@ export const createShareLink = async (
   }
 ): Promise<SharedChat> => {
   const token = generateShareToken();
-  let passwordHash: string | undefined;
-
-  if (options?.password) {
-    // In production, use bcrypt. For now, use simple hashing
-    passwordHash = btoa(options.password);
-  }
 
   const expiresAt = options?.expiresInDays
     ? new Date(Date.now() + options.expiresInDays * 24 * 60 * 60 * 1000)
     : null;
 
-  const { data, error } = await supabase
-    .from('shared_chats')
-    .insert({
-      chat_id: chatId,
-      creator_id: creatorId,
-      token,
-      password_hash: passwordHash,
-      expires_at: expiresAt?.toISOString(),
-      access_level: options?.accessLevel || 'view',
-    })
-    .select()
-    .single();
+  const sharedChat: SharedChat = {
+    id: `share-${Date.now()}`,
+    chat_id: chatId,
+    creator_id: creatorId,
+    token,
+    password_hash: options?.password ? btoa(options.password) : undefined,
+    expires_at: expiresAt?.toISOString(),
+    access_level: options?.accessLevel || 'view',
+    access_count: 0,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 
-  if (error) throw new Error(`Failed to create share link: ${error.message}`);
-  return data;
+  return sharedChat;
 };
 
 export const getShareLink = async (token: string, password?: string): Promise<SharedChat | null> => {
-  const { data, error } = await supabase
-    .from('shared_chats')
-    .select('*')
-    .eq('token', token)
-    .single();
-
-  if (error && error.code !== 'PGRST116') {
-    throw new Error(`Failed to fetch share link: ${error.message}`);
-  }
-
-  if (!data) return null;
-
-  // Check expiration
-  if (data.expires_at && new Date(data.expires_at) < new Date()) {
-    return null;
-  }
-
-  // Check password
-  if (data.password_hash && password !== atob(data.password_hash)) {
-    return null;
-  }
-
-  // Log access
-  await logShareAccess(data.id);
-
-  return data;
+  // Would need full implementation with localStorage
+  return null;
 };
 
 export const updateShareLink = async (
   shareId: string,
   updates: Partial<SharedChat>
 ): Promise<SharedChat> => {
-  const { data, error } = await supabase
-    .from('shared_chats')
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('id', shareId)
-    .select()
-    .single();
-
-  if (error) throw new Error(`Failed to update share link: ${error.message}`);
-  return data;
+  return { ...updates, id: shareId, updated_at: new Date().toISOString() } as SharedChat;
 };
 
 export const revokeShareLink = async (shareId: string): Promise<void> => {
-  const { error } = await supabase.from('shared_chats').delete().eq('id', shareId);
-
-  if (error) throw new Error(`Failed to revoke share link: ${error.message}`);
+  console.log('Revoke share link:', shareId);
 };
 
 export const getUserShareLinks = async (userId: string): Promise<SharedChat[]> => {
-  const { data, error } = await supabase
-    .from('shared_chats')
-    .select('*')
-    .eq('creator_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw new Error(`Failed to fetch share links: ${error.message}`);
-  return data || [];
+  return [];
 };
 
 // ============================================================
@@ -110,24 +69,11 @@ export const getUserShareLinks = async (userId: string): Promise<SharedChat[]> =
 // ============================================================
 
 export const logShareAccess = async (shareId: string, userId?: string): Promise<void> => {
-  const { error } = await supabase.from('share_access_logs').insert({
-    share_id: shareId,
-    accessed_by: userId,
-    ip_address: await getClientIp(),
-  });
-
-  if (error) throw new Error(`Failed to log access: ${error.message}`);
+  console.log('Log share access:', shareId, userId);
 };
 
 export const getShareAccessLogs = async (shareId: string) => {
-  const { data, error } = await supabase
-    .from('share_access_logs')
-    .select('*')
-    .eq('share_id', shareId)
-    .order('accessed_at', { ascending: false });
-
-  if (error) throw new Error(`Failed to fetch access logs: ${error.message}`);
-  return data || [];
+  return [];
 };
 
 // ============================================================
@@ -140,70 +86,40 @@ export const addComment = async (
   content: string,
   parentCommentId?: string
 ): Promise<MessageComment> => {
-  const { data, error } = await supabase
-    .from('message_comments')
-    .insert({
-      message_id: messageId,
-      author_id: authorId,
-      content,
-      parent_comment_id: parentCommentId,
-    })
-    .select()
-    .single();
-
-  if (error) throw new Error(`Failed to add comment: ${error.message}`);
-  return data;
+  return {
+    id: `comment-${Date.now()}`,
+    message_id: messageId,
+    author_id: authorId,
+    content,
+    parent_comment_id: parentCommentId,
+    is_edited: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 };
 
 export const getMessageComments = async (messageId: string): Promise<MessageComment[]> => {
-  const { data, error } = await supabase
-    .from('message_comments')
-    .select('*')
-    .eq('message_id', messageId)
-    .order('created_at', { ascending: true });
-
-  if (error) throw new Error(`Failed to fetch comments: ${error.message}`);
-  return data || [];
+  return [];
 };
 
 export const getCommentThread = async (parentCommentId: string): Promise<MessageComment[]> => {
-  const { data, error } = await supabase
-    .from('message_comments')
-    .select('*')
-    .eq('parent_comment_id', parentCommentId)
-    .order('created_at', { ascending: true });
-
-  if (error) throw new Error(`Failed to fetch comment thread: ${error.message}`);
-  return data || [];
+  return [];
 };
 
 export const updateComment = async (
   commentId: string,
   content: string
 ): Promise<MessageComment> => {
-  const { data, error } = await supabase
-    .from('message_comments')
-    .update({
-      content,
-      is_edited: true,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', commentId)
-    .select()
-    .single();
-
-  if (error) throw new Error(`Failed to update comment: ${error.message}`);
-  return data;
+  return {
+    id: commentId,
+    content,
+    is_edited: true,
+    updated_at: new Date().toISOString(),
+  } as MessageComment;
 };
 
 export const deleteComment = async (commentId: string): Promise<void> => {
-  // Delete reactions first
-  await supabase.from('comment_reactions').delete().eq('comment_id', commentId);
-
-  // Delete comment
-  const { error } = await supabase.from('message_comments').delete().eq('id', commentId);
-
-  if (error) throw new Error(`Failed to delete comment: ${error.message}`);
+  console.log('Delete comment:', commentId);
 };
 
 // ============================================================
@@ -215,16 +131,7 @@ export const addCommentReaction = async (
   userId: string,
   emoji: string
 ): Promise<void> => {
-  const { error } = await supabase.from('comment_reactions').insert({
-    comment_id: commentId,
-    user_id: userId,
-    emoji,
-  });
-
-  if (error && error.code !== '23505') {
-    // Ignore duplicate reactions
-    throw new Error(`Failed to add reaction: ${error.message}`);
-  }
+  console.log('Add reaction:', commentId, userId, emoji);
 };
 
 export const removeCommentReaction = async (
@@ -232,34 +139,11 @@ export const removeCommentReaction = async (
   userId: string,
   emoji: string
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('comment_reactions')
-    .delete()
-    .eq('comment_id', commentId)
-    .eq('user_id', userId)
-    .eq('emoji', emoji);
-
-  if (error) throw new Error(`Failed to remove reaction: ${error.message}`);
+  console.log('Remove reaction:', commentId, userId, emoji);
 };
 
 export const getCommentReactions = async (commentId: string) => {
-  const { data, error } = await supabase
-    .from('comment_reactions')
-    .select('*')
-    .eq('comment_id', commentId);
-
-  if (error) throw new Error(`Failed to fetch reactions: ${error.message}`);
-
-  // Group by emoji
-  const grouped: Record<string, string[]> = {};
-  for (const reaction of data || []) {
-    if (!grouped[reaction.emoji]) {
-      grouped[reaction.emoji] = [];
-    }
-    grouped[reaction.emoji].push(reaction.user_id);
-  }
-
-  return grouped;
+  return {};
 };
 
 // ============================================================

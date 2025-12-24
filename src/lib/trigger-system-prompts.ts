@@ -414,7 +414,7 @@ export const buildCompleteEnhancedSystemPrompt = (
 
   triggers.forEach((trigger, idx) => {
     systemPrompts.push(`### Trigger ${idx + 1}: ${trigger.trigger}`);
-    systemPrompts.push(`Instruction: ${trigger.system_instruction}`);
+    systemPrompts.push(`Instruction: ${trigger.systemInstruction}`);
     systemPrompts.push('');
   });
 

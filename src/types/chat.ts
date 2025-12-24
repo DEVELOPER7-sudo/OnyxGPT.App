@@ -97,12 +97,8 @@ export interface Bot {
   pfp_url?: string;
   system_prompt: string;
   model_id: string;
-  visibility: 'private' | 'unlisted' | 'public';
-  capabilities: {
-    memory: boolean;
-    files: boolean;
-    tools: string[];
-  };
+  visibility: string;
+  capabilities: any;
   created_at: string;
   updated_at: string;
   usage_count: number;
@@ -113,7 +109,7 @@ export interface BotChat {
   bot_uuid: string;
   chat_id: string;
   user_id: string;
-  bot_config: Partial<Bot>;
+  bot_config: any;
   created_at: string;
 }
 

@@ -124,8 +124,9 @@ const BotLauncher = () => {
 
 ${state.bot.description || 'Ready to assist you with your needs.'}
 
-**Bot created by:** ${state.bot.creator_id}
+**Bot created by:** ${state.bot.creator_username || 'Unknown'}
 **Category:** ${state.bot.category || 'General'}
+**Model:** ${state.bot.model_id}
 
 You can switch between chats using the sidebar or create a new chat. However, **you cannot switch to different bots** while in this chat session. To use another bot, go back to the bots gallery.`,
       timestamp: Date.now(),

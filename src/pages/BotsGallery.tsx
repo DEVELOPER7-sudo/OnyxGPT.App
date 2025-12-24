@@ -40,10 +40,14 @@ const BotsGallery = () => {
         setLoading(true);
         // Pass user?.id even if undefined - service handles both authenticated and guest
         const botList = await botService.fetchBots(user?.id, selectedCategory);
+        if (!botList || botList.length === 0) {
+          console.log('No bots found for category:', selectedCategory);
+        }
         setBots(botList);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading bots:', error);
-        toast.error('Failed to load bots');
+        const errorMessage = error?.message || 'Failed to load bots. Please try again.';
+        toast.error(errorMessage);
         setBots([]); // Set empty array on error
       } finally {
         setLoading(false);

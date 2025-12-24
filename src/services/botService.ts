@@ -24,12 +24,20 @@ export const botService = {
       if (error) {
         console.error('Error fetching bots:', error);
         console.error('Error details:', error.message, error.details);
+        
+        // If table doesn't exist, provide helpful message
+        if (error.message?.includes('Could not find the table')) {
+          console.error('CRITICAL: Bots table does not exist. Please run migrations in Supabase Dashboard.');
+          throw new Error('Bot system not initialized. Please contact support.');
+        }
+        
         return [];
       }
 
       return data || [];
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in fetchBots:', error);
+      // Don't throw, just return empty array to prevent crashes
       return [];
     }
   },
@@ -113,7 +121,20 @@ export const botService = {
     if (error) {
       console.error('Error creating bot:', error);
       console.error('Sent data:', botData);
-      const errorMessage = error.message || 'Failed to create bot. Please check your input and try again.';
+      
+      // Handle specific errors
+      let errorMessage = error.message || 'Failed to create bot.';
+      
+      if (error.message?.includes('Could not find the table')) {
+        errorMessage = 'Bot system not initialized. Please contact support.';
+      } else if (error.message?.includes('auth.uid()')) {
+        errorMessage = 'You must be logged in to create a bot.';
+      } else if (error.message?.includes('permission')) {
+        errorMessage = 'You do not have permission to create bots.';
+      } else if (!errorMessage.includes('Please')) {
+        errorMessage += ' Please check your input and try again.';
+      }
+      
       const err = new Error(errorMessage);
       throw err;
     }

@@ -186,6 +186,12 @@ const BotCreator = () => {
     } catch (error: any) {
       console.error('Error saving bot:', error);
       const errorMessage = error?.message || (isEditing ? 'Failed to update bot' : 'Failed to create bot');
+      
+      // Log more details for debugging
+      if (error?.message?.includes('Could not find')) {
+        console.error('CRITICAL: Database tables not found. Check Supabase migrations.');
+      }
+      
       toast.error(errorMessage);
     } finally {
       setLoading(false);

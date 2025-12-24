@@ -100,13 +100,23 @@ export function useAsyncPerformance(operationName: string) {
 /**
  * Hook to monitor memory usage (if available)
  */
+// Extend Performance interface for Chrome's memory API
+interface PerformanceWithMemory extends Performance {
+  memory?: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  };
+}
+
 export function useMemoryMonitor() {
   const memoryRef = useRef<number[]>([]);
 
   const recordMemory = useCallback(() => {
-    if (performance.memory) {
-      const used = performance.memory.usedJSHeapSize;
-      const total = performance.memory.totalJSHeapSize;
+    const perf = performance as PerformanceWithMemory;
+    if (perf.memory) {
+      const used = perf.memory.usedJSHeapSize;
+      const total = perf.memory.totalJSHeapSize;
       memoryRef.current.push(used);
       return { used, total, percentage: (used / total) * 100 };
     }

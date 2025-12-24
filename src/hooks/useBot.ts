@@ -45,11 +45,11 @@ export const useBot = () => {
   );
 
   const createBot = useCallback(
-    async (config: any, userId: string, pfpFile?: File) => {
+    async (config: any, userId: string, username?: string, pfpFile?: File) => {
       setLoading(true);
       setError(null);
       try {
-        const newBot = await botService.createBot(config, userId, pfpFile);
+        const newBot = await botService.createBot(config, userId, username || '', pfpFile);
         setBots((prev) => [newBot, ...prev]);
         return newBot;
       } catch (err) {

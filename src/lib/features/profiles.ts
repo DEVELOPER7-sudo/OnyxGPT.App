@@ -1,23 +1,22 @@
-import { supabase } from '../../integrations/supabase/client';
 import { UserProfile } from '../../types/features';
+
+// ============================================================
+// LOCAL STORAGE KEY
+// ============================================================
+
+const STORAGE_KEY = 'onyx_user_profiles';
 
 // ============================================================
 // USER PROFILE OPERATIONS
 // ============================================================
 
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (error && error.code !== 'PGRST116') {
-    // PGRST116 = no rows found
-    throw new Error(`Failed to fetch user profile: ${error.message}`);
+  try {
+    const stored = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
   }
-
-  return data || null;
 };
 
 export const createUserProfile = async (
@@ -25,34 +24,26 @@ export const createUserProfile = async (
   displayName?: string,
   bio?: string
 ): Promise<UserProfile> => {
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .insert({
-      id: userId,
-      display_name: displayName,
-      bio,
-      profile_visibility: 'public',
-    })
-    .select()
-    .single();
-
-  if (error) throw new Error(`Failed to create user profile: ${error.message}`);
-  return data;
+  const profile: UserProfile = {
+    id: userId,
+    display_name: displayName,
+    bio,
+    profile_visibility: 'public',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(profile));
+  return profile;
 };
 
 export const updateUserProfile = async (
   userId: string,
   updates: Partial<UserProfile>
 ): Promise<UserProfile> => {
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw new Error(`Failed to update user profile: ${error.message}`);
-  return data;
+  const existing = await getUserProfile(userId) || await createUserProfile(userId);
+  const updated = { ...existing, ...updates, updated_at: new Date().toISOString() };
+  localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(updated));
+  return updated;
 };
 
 // ============================================================
@@ -60,43 +51,25 @@ export const updateUserProfile = async (
 // ============================================================
 
 export const uploadAvatar = async (userId: string, file: File): Promise<string> => {
-  // Optimize image size
+  // Optimize image and create object URL
   const optimizedFile = await optimizeImage(file);
-
-  const filename = `${userId}-${Date.now()}.jpg`;
-  const filePath = `avatars/${filename}`;
-
-  const { error } = await supabase.storage.from('user-assets').upload(filePath, optimizedFile, {
-    cacheControl: '3600',
-    upsert: false,
-  });
-
-  if (error) throw new Error(`Failed to upload avatar: ${error.message}`);
-
-  // Get public URL
-  const { data } = supabase.storage.from('user-assets').getPublicUrl(filePath);
-
+  const url = URL.createObjectURL(optimizedFile);
+  
   // Update profile with avatar URL
-  await updateUserProfile(userId, { avatar_url: data.publicUrl });
-
-  return data.publicUrl;
+  await updateUserProfile(userId, { avatar_url: url });
+  
+  return url;
 };
 
 export const deleteAvatar = async (userId: string): Promise<void> => {
   const profile = await getUserProfile(userId);
 
   if (profile?.avatar_url) {
-    // Extract filename from URL
-    const filename = profile.avatar_url.split('/').pop();
-    if (filename) {
-      const { error } = await supabase
-        .storage.from('user-assets')
-        .remove([`avatars/${filename}`]);
-
-      if (error) throw new Error(`Failed to delete avatar: ${error.message}`);
+    // Revoke object URL if it was created locally
+    if (profile.avatar_url.startsWith('blob:')) {
+      URL.revokeObjectURL(profile.avatar_url);
     }
-
-    await updateUserProfile(userId, { avatar_url: null });
+    await updateUserProfile(userId, { avatar_url: undefined });
   }
 };
 

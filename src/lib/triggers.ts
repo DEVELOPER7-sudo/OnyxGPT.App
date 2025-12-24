@@ -12,7 +12,7 @@ export interface TriggerMetadata {
 
 export interface Trigger {
   trigger: string;
-  category: 'Reasoning and Analysis' | 'Research and Information' | 'Planning and Organization' | 'Communication and Style' | 'Coding and Development' | 'Creative and Writing' | 'Data and Analytics' | 'Business and Strategy' | 'Education and Learning';
+  category: string;
   systemInstruction: string;
   example: string;
   enabled: boolean;

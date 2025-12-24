@@ -224,7 +224,8 @@ export const useWorkspaces = () => {
       if (!user) return;
       try {
         const ws = await featuresLib.createWorkspace(user.id, name, description);
-        setWorkspaces((prev) => [ws, ...prev]);
+        // Cast to Workspace type since createWorkspace returns the correct shape now
+        setWorkspaces((prev) => [ws as Workspace, ...prev]);
         return ws;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to create workspace');

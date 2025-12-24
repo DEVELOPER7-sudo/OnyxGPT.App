@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_chats: {
+        Row: {
+          bot_config: Json
+          bot_uuid: string
+          chat_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bot_config?: Json
+          bot_uuid: string
+          chat_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bot_config?: Json
+          bot_uuid?: string
+          chat_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_chats_bot_uuid_fkey"
+            columns: ["bot_uuid"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["uuid"]
+          },
+        ]
+      }
+      bots: {
+        Row: {
+          capabilities: Json
+          category: string | null
+          created_at: string
+          creator_id: string
+          creator_username: string | null
+          description: string | null
+          model_id: string
+          name: string
+          pfp_url: string | null
+          system_prompt: string
+          updated_at: string
+          usage_count: number
+          uuid: string
+          visibility: string
+        }
+        Insert: {
+          capabilities?: Json
+          category?: string | null
+          created_at?: string
+          creator_id: string
+          creator_username?: string | null
+          description?: string | null
+          model_id?: string
+          name: string
+          pfp_url?: string | null
+          system_prompt: string
+          updated_at?: string
+          usage_count?: number
+          uuid?: string
+          visibility?: string
+        }
+        Update: {
+          capabilities?: Json
+          category?: string | null
+          created_at?: string
+          creator_id?: string
+          creator_username?: string | null
+          description?: string | null
+          model_id?: string
+          name?: string
+          pfp_url?: string | null
+          system_prompt?: string
+          updated_at?: string
+          usage_count?: number
+          uuid?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       chats: {
         Row: {
           created_at: number
@@ -94,6 +180,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_bot_usage: { Args: { bot_uuid: string }; Returns: undefined }
       remove_user_role: {
         Args: {
           _role_name: Database["public"]["Enums"]["app_role"]

@@ -1,7 +1,7 @@
 // Dynamic Island and Oppo Always-On Display Support
 // Shows active tasks and notifications in notch/island areas
 
-interface DynamicIslandTask {
+export interface DynamicIslandTask {
   id: string;
   title: string;
   description?: string;
@@ -11,7 +11,7 @@ interface DynamicIslandTask {
   timestamp: number;
 }
 
-interface IslandConfig {
+export interface IslandConfig {
   enabled: boolean;
   showProgress: boolean;
   showDescription: boolean;
@@ -272,7 +272,7 @@ export const getDynamicIslandCSS = (): string => {
  * Helps with layout calculations
  */
 export const getIslandAdjustedViewport = (): number => {
-  if (typeof window === 'undefined') return window?.innerHeight || 0;
+  if (typeof window === 'undefined') return 0;
 
   // Get safe area inset from CSS
   const safeAreaTop = parseInt(

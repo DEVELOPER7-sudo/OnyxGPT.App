@@ -561,4 +561,4 @@ Built with ❤️ using:
 
 **OnyxGPT v3.0.0** - The Most Powerful Free AI Platform
 
-Get started today: [Visit OnyxGPT](https://onyxgpt.app)
+Get started today: [Visit OnyxGPT](https://aionyxgpt.vercel.app)

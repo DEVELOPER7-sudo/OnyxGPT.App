@@ -23,7 +23,7 @@ A next-generation AI-powered platform featuring advanced trigger framework, 50+ 
 
 ---
 
-## 🤖 50+ Supported AI Models
+## 🤖 500+ Supported AI Models
 
 ### **OpenAI** (GPT Series)
 - `gpt-4-turbo` - Most capable general model
@@ -498,7 +498,7 @@ npx cap open ios
 ## 🛣️ Roadmap
 
 ### Completed ✅
-- [x] 50+ AI Models integration
+- [x] 500+ AI Models integration
 - [x] MindStore (Memory System)
 - [x] 60+ Trigger Framework
 - [x] Custom Bots
@@ -556,7 +556,6 @@ Built with ❤️ using:
 
 - **GitHub Issues**: Report bugs and request features
 - **GitHub Discussions**: Ask questions and share ideas
-- **Email**: dev@onyxgpt.ai
 
 ---
 

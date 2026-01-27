@@ -337,12 +337,15 @@ const ChatApp = () => {
      }
 
      // Use selected model
-     const modelId = settings.textModel;
+     let modelId = settings.textModel;
 
-
+     // Auto-add openrouter: prefix if model looks like an OpenRouter model (contains / and no prefix)
+     if (modelId.includes('/') && !modelId.startsWith('openrouter:')) {
+       modelId = `openrouter:${modelId}`;
+     }
 
      // @ts-ignore - Puter is loaded via script tag (HTML style)
-    const puter = (window as any)?.puter;
+     const puter = (window as any)?.puter;
     if (!puter?.ai?.chat) {
       toast.error('AI service not available');
       setIsLoading(false);

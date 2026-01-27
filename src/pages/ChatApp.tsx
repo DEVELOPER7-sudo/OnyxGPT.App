@@ -344,9 +344,6 @@ const ChatApp = () => {
        modelId = `openrouter:${modelId}`;
      }
 
-     // Strip openrouter: prefix for Puter API (Puter handles the routing internally)
-     const puterModelId = modelId.replace('openrouter:', '');
-
      // @ts-ignore - Puter is loaded via script tag (HTML style)
      const puter = (window as any)?.puter;
     if (!puter?.ai?.chat) {
@@ -490,7 +487,7 @@ const ChatApp = () => {
 
     try {
       const response = await puter.ai.chat(formattedMessages, {
-        model: puterModelId,
+        model: modelId,
         stream: true,
         temperature: settings.temperature,
         max_tokens: settings.maxTokens,

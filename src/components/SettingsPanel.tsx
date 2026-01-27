@@ -90,8 +90,7 @@ const SettingsPanel = ({
     }
 
     const modelId = customModelInput.trim();
-    const prefix = localSettings.customModelPrefix || 'openrouter';
-    const success = addCustomModel(modelId, prefix);
+    const success = addCustomModel(modelId);
     
     if (success) {
       setCustomModels(getCustomModels());
@@ -283,66 +282,15 @@ const SettingsPanel = ({
         {/* Custom Model Management */}
         <div className="border-t border-border pt-6 space-y-4">
           <div>
-            <Label className="text-base font-semibold">Custom Model API Prefix</Label>
-            <p className="text-xs text-muted-foreground mt-1">
-              Choose which API provider to use when adding custom models.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div 
-              className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                localSettings.customModelPrefix === 'openrouter' 
-                  ? 'border-blue-500 bg-blue-500/10' 
-                  : 'border-border hover:border-blue-500/50'
-              }`}
-              onClick={() => setLocalSettings({ ...localSettings, customModelPrefix: 'openrouter' })}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full border-2 border-blue-500 flex items-center justify-center">
-                  {localSettings.customModelPrefix === 'openrouter' && (
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  )}
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">OpenRouter</p>
-                  <p className="text-xs text-muted-foreground">openrouter: prefix</p>
-                </div>
-              </div>
-            </div>
-
-            <div 
-              className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                localSettings.customModelPrefix === 'togetherai' 
-                  ? 'border-green-500 bg-green-500/10' 
-                  : 'border-border hover:border-green-500/50'
-              }`}
-              onClick={() => setLocalSettings({ ...localSettings, customModelPrefix: 'togetherai' })}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full border-2 border-green-500 flex items-center justify-center">
-                  {localSettings.customModelPrefix === 'togetherai' && (
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                  )}
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">Together AI</p>
-                  <p className="text-xs text-muted-foreground">togetherai: prefix</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-border pt-4">
             <Label className="text-base font-semibold">Add Custom Model</Label>
             <p className="text-xs text-muted-foreground mt-1">
-              Add any custom model ID supported by your selected API provider.
+              Add any raw model ID. The app will use your model ID exactly as provided.
             </p>
           </div>
           
           <div className="flex gap-2">
             <Input
-              placeholder="model-name (e.g. custom-model-v1)"
+              placeholder="Enter your raw model ID (e.g. gpt-4o, claude-3-sonnet-20240229)"
               value={customModelInput}
               onChange={(e) => setCustomModelInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddCustomModel()}

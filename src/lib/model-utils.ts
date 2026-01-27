@@ -58,18 +58,17 @@ export function saveCustomModels(models: string[]): void {
 }
 
 /**
- * Add a custom model - automatically adds prefix if not present
+ * Add a custom model - stores raw model ID without any prefix
  */
-export function addCustomModel(modelId: string, prefix: 'openrouter' | 'togetherai' = 'openrouter'): boolean {
-  // Auto-add prefix if not present
-  const hasPrefix = modelId.startsWith('openrouter:') || modelId.startsWith('togetherai:');
-  const prefixedModelId = hasPrefix ? modelId : `${prefix}:${modelId}`;
+export function addCustomModel(modelId: string): boolean {
+  // Store raw model ID as-is
+  const rawModelId = modelId.trim();
   
   const customModels = getCustomModels();
-  if (customModels.includes(prefixedModelId)) {
+  if (customModels.includes(rawModelId)) {
     return false; // Already exists
   }
-  customModels.push(prefixedModelId);
+  customModels.push(rawModelId);
   saveCustomModels(customModels);
   return true;
 }

@@ -65,7 +65,6 @@ export interface AppSettings {
   customOpenRouterKey?: string;
   streamingEnabled?: boolean; // New: toggle streaming
   defaultTriggers?: string[]; // Default triggers to apply to all messages
-  customModelPrefix?: 'openrouter' | 'togetherai'; // Custom model API prefix
   useCustomSystemPrompt?: boolean; // Toggle custom system prompt
   customSystemPrompt?: string; // Custom system prompt text
   speechEnabled?: boolean; // Enable text-to-speech for responses

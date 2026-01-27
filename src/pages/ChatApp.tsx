@@ -486,12 +486,16 @@ const ChatApp = () => {
     const memoryContextPayload = formatMemoriesForMindstore(userMemories);
 
     try {
-      const response = await puter.ai.chat(formattedMessages, {
+      // Build the prompt from system + user messages
+      const systemMsg = formattedMessages[0]?.content || '';
+      const userMsg = formattedMessages[formattedMessages.length - 1]?.content || userText;
+      const fullPrompt = systemMsg ? `${systemMsg}\n\n${userMsg}` : userMsg;
+
+      const response = await puter.ai.chat(fullPrompt, {
         model: modelId,
         stream: true,
         temperature: settings.temperature,
         max_tokens: settings.maxTokens,
-        mindstore: memoryContextPayload,
       });
 
       let fullResponse = '';
